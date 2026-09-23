@@ -1,0 +1,12 @@
+# Refusals, as this run produced them
+#
+# The successes above are portable as a claim; these lines are portable as
+# data. A consumer that keeps INDEPENDENT_MATCH and drops these keeps the
+# product and loses the procedure. Regenerate with ./verify.sh
+
+refuse: a seq is missing	REFUSED  the chain is broken: 1 seq(s) from 1 to 24 are absent, first missing 24
+refuse: record vs page count	REFUSED  the election record says votes_cast=24, the page(s) claim [23] — one of them was read at another moment
+refuse: election still open	REFUSED  election status is 'open', not closed: an open ballot is not a recount. Pass --preview if this really is a rehearsal.
+refuse: newest page alone	REFUSED  the chain is broken: 7 seq(s) from 1 to 37 are absent, first missing 1
+refuse: the same page twice	REFUSED  seq 37 appears in two pages
+refuse: no seq 1 in sight	REFUSED  the chain is broken: 30 seq(s) from 1 to 37 are absent, first missing 8

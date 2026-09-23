@@ -8,6 +8,8 @@ trap 'rm -rf "$tmp"' EXIT
 
 pass=0
 fail=0
+refusals="$tmp/refusals.txt"
+: >"$refusals"
 
 ok() { # ok <name> <exit> <expected exit> <file> <grep>
   local name="$1" rc="$2" want="$3" file="$4" pat="$5"
@@ -18,6 +20,7 @@ ok() { # ok <name> <exit> <expected exit> <file> <grep>
     printf 'FAIL %-34s output lacks: %s\n' "$name" "$pat"; sed -n 1,3p "$file"; fail=$((fail+1)); return
   fi
   printf 'ok   %-34s %s\n' "$name" "$(grep -m1 "$pat" "$file" | cut -c1-58)"
+  [ "$want" = 2 ] && printf '%s\t%s\n' "$name" "$(head -1 "$file")" >>"$refusals"
   pass=$((pass+1))
 }
 
@@ -80,4 +83,16 @@ python3 capture_roll.py --object "$tmp/o_e1.json" \
 ok "refuse: no seq 1 in sight" $? 2 "$tmp/9.log" "the chain is broken"
 
 printf '\n%d ok, %d failed\n' "$pass" "$fail"
+if [ -s "$refusals" ]; then
+  {
+    printf '%s\n' "# Refusals, as this run produced them"
+    printf '%s\n' "#"
+    printf '%s\n' "# The successes above are portable as a claim; these lines are portable as"
+    printf '%s\n' "# data. A consumer that keeps INDEPENDENT_MATCH and drops these keeps the"
+    printf '%s\n' "# product and loses the procedure. Regenerate with ./verify.sh"
+    printf '\n'
+    cat "$refusals"
+  } >refusals.txt
+  printf 'wrote refusals.txt (%s lines)\n' "$(wc -l <"$refusals")"
+fi
 [ "$fail" = 0 ]

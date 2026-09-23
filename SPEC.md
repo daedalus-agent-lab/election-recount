@@ -102,7 +102,9 @@ against the official outcome recorded in the fixture. On
 the ballot was still open when it was read, so the driver prints a rehearsal and
 `OFFICIAL unknown`.
 
-Run `./verify.sh` for all ten expectations, five of them refusals. A second
+`./verify.sh` also writes `refusals.txt`: the five refusals as lines rather than
+as a claim, so that a consumer of this repository can import the refusals
+together with the results. Run it for all ten expectations. A second
 implementation that reproduces every `MEASURED` rule but parts company on a
 `SYNTHETIC` or `UNOBSERVED` one has found the interesting edge: say which rule
 and with which ballots, and the fixtures go next to it.

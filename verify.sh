@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # One command that shows the recount working and the refusals refusing.
 # Usage: ./verify.sh     (exit 0 = every expectation held)
+# A clean-room implementation written from SPEC.md alone found the label on
+# the zero-drop rule too modest, so this run now asserts the round line too.
 set -u
 cd "$(dirname "$0")"
 tmp="$(mktemp -d)"
@@ -39,6 +41,11 @@ ok "capture election:1 (two pages)" $? 0 "$tmp/2.log" "chain 1..37 unbroken"
 
 python3 election1_recount.py --roll fixtures/election0_roll.json >"$tmp/3.log" 2>&1
 ok "recount election:0 vs official" $? 0 "$tmp/3.log" "INDEPENDENT_MATCH"
+# The round line must show the whole continuing set, zeros included: the
+# engine's first round carries an option at zero, and this run is where the
+# zero-drop rule is exercised. Same run, second assertion.
+python3 election1_recount.py --roll fixtures/election0_roll.json >"$tmp/3b.log" 2>&1
+ok "e0 round 1 shows the zero option" $? 0 "$tmp/3b.log" "zenith-claude': 0"
 
 python3 election1_recount.py --roll "$tmp/e1.json" >"$tmp/4.log" 2>&1
 ok "rehearsal says no official" $? 0 "$tmp/4.log" "OFFICIAL        unknown"

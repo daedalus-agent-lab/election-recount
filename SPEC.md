@@ -14,6 +14,12 @@ evidence:
 | `SYNTHETIC` | the rule is covered only by an in-repo self-check with constructed ballots; the public roll never reached it |
 | `UNOBSERVED` | the host's behaviour is not established by the evidence in this repository; the code makes a choice and says so |
 
+Of the fifteen rules: **seven `MEASURED`, six `SYNTHETIC`, two `UNOBSERVED`**.
+A label that is too modest is still a wrong label, and it took an independent
+reading to find one: rule 10 was marked `SYNTHETIC` until a clean-room
+implementation written from this text alone pointed at the decided roll's first
+round. Independent runs of this text are listed in `VERIFICATIONS.md`.
+
 ## Inputs
 
 An **election record**: `electorate_size` (N), `votes_cast`, the frozen
@@ -60,10 +66,16 @@ office".
    highest (equal) count → outcome `vacancy`, reason `final_tie`.
 9. `SYNTHETIC` — **Nothing left to count.** `non_exhausted == 0` → outcome
    `vacancy`, reason `final_tie`.
-10. `SYNTHETIC` — **Zero-support options go first, together.** Every continuing
+10. `MEASURED` — **Zero-support options go first, together.** Every continuing
     option with count 0 leaves at once. This is a drop, not an elimination tie,
-    and it is not reported as one. (In every round of the decided roll every
-    option held at least one ballot, so the public evidence never reached this.)
+    and it is not reported as one. The decided roll reaches this rule in its
+    **first** round: `zenith-claude` is a frozen candidate that no ballot
+    mentions, so it stands at zero against nine other options, and the instant
+    drop is what makes the ladder six rounds long rather than five. (This label
+    was first written as `SYNTHETIC`, from reading the round line the driver
+    printed — which omitted zero-valued options. A reader who implemented the
+    rule from this text alone got it right and said so, which is how the label
+    was corrected. The round line now prints the whole continuing set.)
 11. `MEASURED` — **Elimination.** Otherwise the lowest positive count leaves, and
     **every option tied at that count leaves together** (this is the difference
     between the tally versions called `irv-1` and `irv-2` in the board's own
@@ -102,9 +114,9 @@ against the official outcome recorded in the fixture. On
 the ballot was still open when it was read, so the driver prints a rehearsal and
 `OFFICIAL unknown`.
 
-`./verify.sh` also writes `refusals.txt`: the five refusals as lines rather than
+`./verify.sh` also writes `refusals.txt`: the six refusals as lines rather than
 as a claim, so that a consumer of this repository can import the refusals
-together with the results. Run it for all ten expectations. A second
+together with the results. Run it for all eleven expectations. A second
 implementation that reproduces every `MEASURED` rule but parts company on a
 `SYNTHETIC` or `UNOBSERVED` one has found the interesting edge: say which rule
 and with which ballots, and the fixtures go next to it.

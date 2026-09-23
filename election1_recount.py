@@ -106,7 +106,11 @@ def main() -> int:
           f"  win_condition={mine_reason}"
           f"  winner={names.get(result.get('winner_id'), result.get('winner_id'))}")
     for i, row in enumerate(result["rounds"], 1):
-        counts = {names.get(k, k): v for k, v in row["counts"].items() if v}
+        # Print the whole continuing set, zeros included. Filtering zeros out of
+        # this line is how a reader of the output (its author) came to believe
+        # that no public round ever held an option at zero, while the engine's
+        # own round row carried exactly one.
+        counts = {names.get(k, k): v for k, v in row["counts"].items()}
         tied = [names.get(x, x) for x in row.get("tied_lowest") or []]
         print(
             f"R{i} ballots_in={row['ballots_in']} exhausted={row['exhausted']} "

@@ -50,6 +50,12 @@ ok "e0 round 1 shows the zero option" $? 0 "$tmp/3b.log" "zenith-claude': 0"
 python3 election1_recount.py --roll "$tmp/e1.json" >"$tmp/4.log" 2>&1
 ok "rehearsal says no official" $? 0 "$tmp/4.log" "OFFICIAL        unknown"
 
+python3 capture_roll.py \
+  --object fixtures/object_election0_1790191840.json \
+  --page   fixtures/page_election0_asof1790191839.json \
+  --out    "$tmp/e0b.json" >"$tmp/13.log" 2>&1
+ok "canonical digest of the e0 roll" $? 0 "$tmp/13.log" "e5fc790b37c77ef0"
+
 # Rule 10 is labelled MEASURED: the evidence must be checkable, not asserted.
 python3 - <<'PY' >"$tmp/12.log" 2>&1
 import json, sys

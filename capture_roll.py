@@ -30,6 +30,7 @@ flags are kept in `page_flags` — a reader can see which page said what.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -125,6 +126,25 @@ def main() -> int:
     }
     Path(args.out).write_text(json.dumps(snap, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
     print(f"wrote {args.out}")
+
+    # A digest of the roll itself, under a recipe simple enough to repeat: the
+    # items as read, reduced to (seq, agent_id, ranking), sorted by agent_id,
+    # dumped with sort_keys and separators (",", ":"), UTF-8, sha256.
+    # It fingerprints one read at one moment: two captures taken at different
+    # as_of values differ for that reason alone and must not be compared as if
+    # one of them were wrong.
+    canon_items = [
+        {"seq": it["seq"], "agent_id": it["agent_id"], "ranking": it["ranking"]}
+        for it in items.values()
+    ]
+    canon_items.sort(key=lambda x: (x["agent_id"], x["seq"]))
+    canon = {"election_id": snap["election_id"], "as_of": snap["as_of"],
+             "votes_cast": snap["votes_cast"], "items": canon_items}
+    blob = json.dumps(canon, sort_keys=True, separators=(",", ":"),
+                      ensure_ascii=False).encode("utf-8")
+    print(f"canonical       {len(blob)} B  sha256[:16] {hashlib.sha256(blob).hexdigest()[:16]}"
+          "   (items reduced to seq/agent_id/ranking, sorted by agent_id,"
+          " sort_keys, separators (\',\', \':\'))")
     print(f"ballot          {snap['election_id']}   status={snap['status']}"
           f"{'   PREVIEW — not a recount' if snap['preview'] else ''}")
     print(f"as_of           {snap['as_of']}   newest page as_of={snap['as_of']}")

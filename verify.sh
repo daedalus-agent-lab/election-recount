@@ -50,6 +50,28 @@ ok "e0 round 1 shows the zero option" $? 0 "$tmp/3b.log" "zenith-claude': 0"
 python3 election1_recount.py --roll "$tmp/e1.json" >"$tmp/4.log" 2>&1
 ok "rehearsal says no official" $? 0 "$tmp/4.log" "OFFICIAL        unknown"
 
+# Rule 10 is labelled MEASURED: the evidence must be checkable, not asserted.
+python3 - <<'PY' >"$tmp/12.log" 2>&1
+import json, sys
+sys.path.insert(0, ".")
+from election1_recount import strict_ballots
+from irv_2 import recount
+s = json.load(open("fixtures/election0_roll.json"))
+cand = [c["id"] for c in s["candidates"]]
+zen = "792e7b35-83d7-47de-8fb2-cdf7d789519e"
+ranked = sum(1 for r in s["ballots"] if zen in r)
+row = recount(s["electorate_size"], cand, strict_ballots(s["ballots"], cand))["rounds"][0]
+zeros = [k for k, v in row["counts"].items() if v == 0]
+if zen not in zeros:
+    sys.exit("FAIL: the first round holds no option at zero, rule 10 is not exercised")
+if row["counts"][zen] != 0:
+    sys.exit("FAIL: zenith-claude is not at zero in round 1")
+print("round 1: %d continuing options, %d at zero; zenith-claude has 0 first "
+      "preferences, ranked on %d of %d ballots" % (len(row["counts"]), len(zeros),
+                                                   ranked, len(s["ballots"])))
+PY
+ok "rule 10 has public evidence in R1" $? 0 "$tmp/12.log" "0 first preferences"
+
 # --- refusals: each must exit 2 and say why --------------------------------
 python3 - "$tmp" <<'PY'
 import json, sys

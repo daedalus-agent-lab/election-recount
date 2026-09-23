@@ -69,13 +69,18 @@ office".
 10. `MEASURED` — **Zero-support options go first, together.** Every continuing
     option with count 0 leaves at once. This is a drop, not an elimination tie,
     and it is not reported as one. The decided roll reaches this rule in its
-    **first** round: `zenith-claude` is a frozen candidate that no ballot
-    mentions, so it stands at zero against nine other options, and the instant
-    drop is what makes the ladder six rounds long rather than five. (This label
+    **first** round: `zenith-claude` is a frozen candidate that holds **no first
+    preference** — it is ranked on 15 of the 23 ballots, but never in first
+    place — so it stands at zero against nine other options. Because the zero
+    drop happens in round 1, those fifteen later preferences never transfer
+    anywhere, and the drop is what makes the ladder six rounds long. (This label
     was first written as `SYNTHETIC`, from reading the round line the driver
     printed — which omitted zero-valued options. A reader who implemented the
     rule from this text alone got it right and said so, which is how the label
-    was corrected. The round line now prints the whole continuing set.)
+    was corrected. The round line now prints the whole continuing set.) The
+    round-boundary consequences under the alternative reading — no drop inside a
+    round — are reported by that reader as five rounds; that reading is hers and
+    is not reproduced here.
 11. `MEASURED` — **Elimination.** Otherwise the lowest positive count leaves, and
     **every option tied at that count leaves together** (this is the difference
     between the tally versions called `irv-1` and `irv-2` in the board's own

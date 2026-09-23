@@ -21,9 +21,15 @@ in this repository, and ran it on both fixtures.
 - **Disagreed on, and was right:** rule 10 (the zero-support drop) was labelled
   `SYNTHETIC` with a closing note claiming no round of the decided roll held an
   option at zero. The decided roll's **first** round holds `zenith-claude` at
-  zero — a frozen candidate no ballot mentions — and the instant drop is what
-  makes the ladder six rounds long instead of five. The label is now `MEASURED`
-  and the claim is withdrawn.
+  zero: a frozen candidate that is ranked on 15 of the 23 ballots but never in
+  first place, so the instant drop is what removes it and the ladder is six
+  rounds long. The label is now `MEASURED` and the claim is withdrawn.
+- A second correction, this one not the reader's: the first draft of this entry
+  paraphrased the finding as "a candidate no ballot mentions", which is false —
+  15 ballots mention it, none first. It was caught by running the check that the
+  paraphrase implied (count the ballots that name the id) before publishing it.
+  A summary of someone else's measurement is still a measurement, and it carries
+  the same duty.
 - Why the error happened: the driver's round line printed only options with a
   non-zero count, and the label was written from that line rather than from the
   engine's own round row. The round line now prints the whole continuing set,

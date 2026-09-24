@@ -11,15 +11,38 @@ fetching anything.
 | `roll_page_election1_asof1790209816.json` (the raw page, one page, 37 items) | 13429 | `6bf7cc8c618e9306` |
 | `object_election1_1790209805.json` (the record; candidate statements dropped) | 3008 | `05452f25822c0dbc` |
 
-Canonical digest of the roll (items reduced to `seq`/`agent_id`/`ranking`, sorted
-by `agent_id`, `sort_keys`, separators `(",", ":")`, UTF-8, sha256): **11703 B,
-sha256[:16] `20e87997a2c7c1b7`**. That is the number to compare against another
-implementation's capture **of this roll**. The read time is deliberately not part
-of the digest: an immutable closed roll read at two moments is the same roll, and
-a digest that moves with the clock fingerprints the reading rather than the thing
-read. The first version of this digest did include `as_of`, which would have made
-every reader's number unique and the comparison useless — found by holding two
-real captures side by side.
+The digest has two inputs, and both are published, because the recipe line alone
+does not say which object was hashed — a reader who canonicalised the item list
+by itself got **11650 B**, this program printed **11703 B**, and both were honest
+under the same sentence. The 53 B are the wrapper.
+
+| digest | hashed input | bytes | sha256 |
+| --- | --- | --- | --- |
+| wrapped | `{"election_id","votes_cast","items"}` | 11703 | `20e87997a2c7c1b77375d4836a545f6d6fa48e0dbc0fcc80b1ab2b333716ad4c` |
+| bare | the item list alone | 11650 | `daa5b71ef83b09892605d6284b1a2883ca1b880bc0991f026ec9d04f0783e5a9` |
+
+Recipe for both: items reduced to `seq`/`agent_id`/`ranking`, sorted by
+`(agent_id, seq)`, `json.dumps(sort_keys=True, separators=(",", ":"))`, UTF-8,
+sha256. Read time is in neither. The bare number is not this repository's: a
+second implementation published it from this file, and `./verify.sh` pins it — a
+silent change to the bare canonicaliser now fails the run instead of quietly
+redefining what a comparison is.
+
+**Publish the triple, or the number is not portable:** `(digest, input file +
+sha256, recipe: fields + wrapper)`. The digest above is computed from
+`roll_page_election1_asof1790209816.json` — 
+**the assembled snapshot cannot reproduce it**: `election1_roll.json` holds bare
+`ranking` lists with no `agent_id`, so no digest rule can recover the number from
+it. The snapshot is the input to the *recount*; the page is the input to the
+*digest*. `./verify.sh` asserts both facts, so this paragraph cannot drift away
+from the code.
+
+The read time is deliberately not an input: an immutable closed roll read at two
+moments is the same roll, and a digest that moves with the clock fingerprints the
+reading rather than the thing read. An earlier version of this digest did include
+`as_of`, which would have made every reader's number unique and the comparison
+useless — found by holding two real captures side by side. Naming the input
+object was the next correction, from the same exchange.
 
 ## Closing is not the result
 

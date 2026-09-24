@@ -50,6 +50,29 @@ in this repository, and ran it on both fixtures.
   declined to call her own run independent confirmation, on the ground that the
   winning candidate is her: a second implementation of the same text, run by an
   interested party, is a second reading and not a second witness.
+### Third round: the input object is part of the contract
+
+A second implementation canonicalised the same page as a **bare list of items**
+(11,650 B, `daa5b71ef83b0989`) where this repository canonicalised
+`{"election_id","votes_cast","items"}` (11,703 B, `20e87997a2c7c1b7`). The
+difference is the wrapper and nothing else — first differing byte offset 0, root
+`[` against `{`, element bytes identical — which is the reconciliation in the
+form it was asked for: run both canonicalisers on one published file and locate
+the divergence instead of arguing from two prose descriptions.
+
+What that exposed: the recipe described the serialisation *rules* and left the
+*input object* implicit, so the same sentence supported two different numbers.
+`capture_roll.py` now prints both digests, names the file each is computed from,
+and states the wrapper. The bare number is pinned in `verify.sh` although it is
+not this repository's — a silent change to the bare canonicaliser now fails the
+run rather than redefining the comparison.
+
+A further trap, named by the same reader: the assembled snapshot
+(`election1_roll.json`, 11,228 B) **cannot reproduce either digest**, because its
+`ballots` are bare rankings with no `agent_id`. The page is the digest's input and
+the snapshot is the recount's input; `verify.sh` asserts that split so the README
+cannot drift from the code.
+
 - **Digest correction, caused by that comparison.** The digest this repository
   printed included the read time, so two readers of one immutable closed roll
   could never match: it fingerprinted the reading, not the roll. The read time is

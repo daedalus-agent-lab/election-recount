@@ -130,27 +130,40 @@ def main() -> int:
     # A digest of the roll itself, under a recipe simple enough to repeat: the
     # items as read, reduced to (seq, agent_id, ranking), sorted by agent_id,
     # dumped with sort_keys and separators (",", ":"), UTF-8, sha256.
-    # It fingerprints one read at one moment: two captures taken at different
-    # as_of values differ for that reason alone and must not be compared as if
-    # one of them were wrong.
+    #
+    # Two things are published, because a digest is only a comparison when the
+    # input *object* is published too and not merely the serialisation rules. A
+    # reader who canonicalised the bare list of items got a different number than
+    # this program, both honest, both described the same way — the wrapper was
+    # never named. So both inputs are hashed and both numbers printed, and the
+    # input file is named beside them with its own digest: a reader can only
+    # reproduce the number from a file, never from a description of one.
+    #
+    # The read time is in neither input. An immutable closed roll read at two
+    # moments is the same roll, and a digest that moves with the clock
+    # fingerprints the reading rather than the thing read.
     canon_items = [
         {"seq": it["seq"], "agent_id": it["agent_id"], "ranking": it["ranking"]}
         for it in items.values()
     ]
     canon_items.sort(key=lambda x: (x["agent_id"], x["seq"]))
-    # The read time is deliberately NOT part of the digest. An immutable closed
-    # roll read twice at two moments is the same roll, and a digest that moves
-    # with the clock fingerprints the reading rather than the thing read: two
-    # readers comparing captures would see a difference they cannot act on. The
-    # moment is printed beside the digest instead.
-    canon = {"election_id": snap["election_id"], "votes_cast": snap["votes_cast"],
-             "items": canon_items}
-    blob = json.dumps(canon, sort_keys=True, separators=(",", ":"),
-                      ensure_ascii=False).encode("utf-8")
-    print(f"canonical       {len(blob)} B  sha256[:16] {hashlib.sha256(blob).hexdigest()[:16]}"
-          "   (the roll's content only: items reduced to seq/agent_id/ranking,"
-          " sorted by agent_id, sort_keys, separators (\',\', \':\');"
-          " the read time is not part of it — see as_of above)")
+    inputs = {
+        "wrapped": {"election_id": snap["election_id"], "votes_cast": snap["votes_cast"],
+                    "items": canon_items},
+        "bare": canon_items,
+    }
+    recipe = ('items reduced to seq/agent_id/ranking, sorted by (agent_id, seq), '
+              'json.dumps(sort_keys=True, separators=(",", ":")), UTF-8, sha256; '
+              'the read time is in neither input')
+    for label in ("wrapped", "bare"):
+        blob = json.dumps(inputs[label], sort_keys=True, separators=(",", ":"),
+                          ensure_ascii=False).encode("utf-8")
+        print(f"digest {label:<8}{len(blob)} B  sha256 {hashlib.sha256(blob).hexdigest()}")
+    print(f'digest input {"":<8}{", ".join(args.page)}'
+          f'   ({len(canon_items)} items, the file(s) the digest is computed from)')
+    print(f"digest recipe   {recipe}")
+    print('digest wrapper  wrapped = {"election_id","votes_cast","items"}; bare = the item list alone.'
+          " Both are printed because either one alone was read as the whole contract.")
     print(f"ballot          {snap['election_id']}   status={snap['status']}"
           f"{'   PREVIEW — not a recount' if snap['preview'] else ''}")
     print(f"as_of           {snap['as_of']}   newest page as_of={snap['as_of']}")

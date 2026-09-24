@@ -56,6 +56,46 @@ python3 capture_roll.py \
   --out    "$tmp/e0b.json" >"$tmp/13.log" 2>&1
 ok "canonical digest of the e0 roll" $? 0 "$tmp/13.log" "0e883a83512c200e"
 
+# Two digests over one file, and the input named. The bare list and the wrapped
+# object are different inputs, and the recipe line alone never said which one
+# was hashed: a reader who canonicalised the list got 11,650 B where this
+# program printed 11,703 B. Both numbers are now pinned, the bare one against a
+# number produced independently by another implementation from the same file.
+python3 capture_roll.py \
+  --object captures/election1/object_election1_1790209805.json \
+  --page   captures/election1/roll_page_election1_asof1790209816.json \
+  --out    "$tmp/e1c.json" >"$tmp/15.log" 2>&1
+ok "wrapped digest of the closed e1 roll" $? 0 "$tmp/15.log" "20e87997a2c7c1b77375d4836a545f6d6fa48e0dbc0fcc80b1ab2b333716ad4c"
+# This number is not this repository's: it was published by a second
+# implementation on the same file. Pinning it means a silent change to the bare
+# canonicaliser fails the run instead of quietly redefining the comparison.
+python3 capture_roll.py \
+  --object captures/election1/object_election1_1790209805.json \
+  --page   captures/election1/roll_page_election1_asof1790209816.json \
+  --out    "$tmp/e1c.json" >"$tmp/16.log" 2>&1
+ok "bare digest matches the other seat" $? 0 "$tmp/16.log" "daa5b71ef83b09892605d6284b1a2883ca1b880bc0991f026ec9d04f0783e5a9"
+python3 capture_roll.py \
+  --object captures/election1/object_election1_1790209805.json \
+  --page   captures/election1/roll_page_election1_asof1790209816.json \
+  --out    "$tmp/e1c.json" >"$tmp/17.log" 2>&1
+ok "the digest names its input" $? 0 "$tmp/17.log" "roll_page_election1_asof1790209816.json"
+# The snapshot must be reproducible *from the page*, and not only by the code
+# that wrote it: the assembly drops agent_id, so the number can never come from
+# the snapshot. Checked here so the README cannot drift back.
+python3 - <<'PY' >"$tmp/18.log" 2>&1
+import json, sys
+page = json.load(open("captures/election1/roll_page_election1_asof1790209816.json"))
+snap = json.load(open("captures/election1/election1_roll.json"))
+if "agent_id" in json.dumps(snap["ballots"][0]):
+    sys.exit("FAIL: the snapshot now carries agent_id; update the README")
+if "agent_id" not in json.dumps(page["items"][0]):
+    sys.exit("FAIL: the page no longer carries agent_id; the digest input changed")
+print("the digest comes from the page (%d items with agent_id); the snapshot "
+      "carries %d bare rankings and cannot reproduce it"
+      % (len(page["items"]), len(snap["ballots"])))
+PY
+ok "digest rides the page, not the" $? 0 "$tmp/18.log" "cannot reproduce it"
+
 python3 election1_recount.py --roll captures/election1/election1_roll.json >"$tmp/14.log" 2>&1
 ok "recount election:1 (closed, captured)" $? 0 "$tmp/14.log" "INDEPENDENT_MATCH"
 

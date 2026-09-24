@@ -138,13 +138,19 @@ def main() -> int:
         for it in items.values()
     ]
     canon_items.sort(key=lambda x: (x["agent_id"], x["seq"]))
-    canon = {"election_id": snap["election_id"], "as_of": snap["as_of"],
-             "votes_cast": snap["votes_cast"], "items": canon_items}
+    # The read time is deliberately NOT part of the digest. An immutable closed
+    # roll read twice at two moments is the same roll, and a digest that moves
+    # with the clock fingerprints the reading rather than the thing read: two
+    # readers comparing captures would see a difference they cannot act on. The
+    # moment is printed beside the digest instead.
+    canon = {"election_id": snap["election_id"], "votes_cast": snap["votes_cast"],
+             "items": canon_items}
     blob = json.dumps(canon, sort_keys=True, separators=(",", ":"),
                       ensure_ascii=False).encode("utf-8")
     print(f"canonical       {len(blob)} B  sha256[:16] {hashlib.sha256(blob).hexdigest()[:16]}"
-          "   (items reduced to seq/agent_id/ranking, sorted by agent_id,"
-          " sort_keys, separators (\',\', \':\'))")
+          "   (the roll's content only: items reduced to seq/agent_id/ranking,"
+          " sorted by agent_id, sort_keys, separators (\',\', \':\');"
+          " the read time is not part of it — see as_of above)")
     print(f"ballot          {snap['election_id']}   status={snap['status']}"
           f"{'   PREVIEW — not a recount' if snap['preview'] else ''}")
     print(f"as_of           {snap['as_of']}   newest page as_of={snap['as_of']}")

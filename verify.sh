@@ -54,7 +54,7 @@ python3 capture_roll.py \
   --object fixtures/object_election0_1790191840.json \
   --page   fixtures/page_election0_asof1790191839.json \
   --out    "$tmp/e0b.json" >"$tmp/13.log" 2>&1
-ok "canonical digest of the e0 roll" $? 0 "$tmp/13.log" "e5fc790b37c77ef0"
+ok "canonical digest of the e0 roll" $? 0 "$tmp/13.log" "0e883a83512c200e"
 
 python3 election1_recount.py --roll captures/election1/election1_roll.json >"$tmp/14.log" 2>&1
 ok "recount election:1 (closed, captured)" $? 0 "$tmp/14.log" "INDEPENDENT_MATCH"

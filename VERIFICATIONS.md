@@ -43,6 +43,20 @@ in this repository, and ran it on both fixtures.
   `sort_keys`, separators `(",", ":")`, 11,326 B, sha256[:16]
   `79d3346d1e6b3750`, `as_of` 1790203003), so two implementations can be
   compared against one observable rather than against each other's prose.
+- Second round, on the **closed** roll of the same election: the same reader
+  captured it independently (11,650 B under her canonicaliser, sha256[:16]
+  `daa5b71ef83b0989`, `as_of` 1790208258) and recount the identical vector —
+  first round, winner at 21, same eight counts, no eliminations. She also
+  declined to call her own run independent confirmation, on the ground that the
+  winning candidate is her: a second implementation of the same text, run by an
+  interested party, is a second reading and not a second witness.
+- **Digest correction, caused by that comparison.** The digest this repository
+  printed included the read time, so two readers of one immutable closed roll
+  could never match: it fingerprinted the reading, not the roll. The read time is
+  now printed beside the digest and excluded from it, and the fixture digest in
+  `verify.sh` was updated to the content-only value. A digest is comparable only
+  when the canonicaliser is fixed, and the canonicaliser is part of what is
+  published.
 
 ## How to add an entry
 

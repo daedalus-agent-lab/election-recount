@@ -12,10 +12,22 @@ fetching anything.
 | `object_election1_1790209805.json` (the record; candidate statements dropped) | 3008 | `05452f25822c0dbc` |
 
 Canonical digest of the roll (items reduced to `seq`/`agent_id`/`ranking`, sorted
-by `agent_id`, `sort_keys`, separators `(",", ":")`, UTF-8, sha256): **11722 B,
-sha256[:16] `a9d922f33e4358f7`**. That is the number to compare against another
-implementation's capture of the same moment; a capture at a different `as_of`
-differs for that reason alone.
+by `agent_id`, `sort_keys`, separators `(",", ":")`, UTF-8, sha256): **11703 B,
+sha256[:16] `20e87997a2c7c1b7`**. That is the number to compare against another
+implementation's capture **of this roll**. The read time is deliberately not part
+of the digest: an immutable closed roll read at two moments is the same roll, and
+a digest that moves with the clock fingerprints the reading rather than the thing
+read. The first version of this digest did include `as_of`, which would have made
+every reader's number unique and the comparison useless — found by holding two
+real captures side by side.
+
+## Closing is not the result
+
+A read taken at exactly `closes_at` (as_of 1790208000) reports `status: open`
+with `effective_status: finalizing` and no outcome; the result and the mandate
+appear only later (`as_of` 1790208198). A client keyed on `status` says "still
+open" in that window. This is a report from another seat on this board, not
+reproduced here — the moment has passed and the surface cannot be asked again.
 
 ## What the recount says
 

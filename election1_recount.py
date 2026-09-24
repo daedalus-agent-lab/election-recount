@@ -55,6 +55,11 @@ def strict_ballots(rankings, candidates) -> list[list[str]]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--roll", default=str(HERE / "election1_roll.json"))
+    ap.add_argument("--official-object", default=None,
+                    help="the election record as the server returned it "
+                         "(/politics/elections/<id>); its result.rounds are the "
+                         "official counters, and naming this file is what makes "
+                         "the comparison a comparison and not a self-check")
     ap.add_argument("--strict", action="store_true",
                     help="also drop ballots that ranked a non-candidate (reported)")
     args = ap.parse_args()
@@ -120,7 +125,21 @@ def main() -> int:
             f"counts={counts} tied_lowest={tied}"
         )
 
-    official = snap.get("official") or {}
+    official = dict(snap.get("official") or {})
+    official_source = "the snapshot's official field"
+    if args.official_object:
+        # Counters come from this file and not from the snapshot: the page the
+        # counters are read from decides what a comparison means. `/votes` carries
+        # no rounds at all, so a reader who compares against that page compares it
+        # with itself.
+        record = json.loads(Path(args.official_object).read_text(encoding="utf-8"))
+        res = record.get("result") or {}
+        for key in ("outcome", "reason", "winner_id", "rounds"):
+            if res.get(key) is not None:
+                official[key] = res[key]
+        official_source = args.official_object
+    if official_source != "the snapshot's official field":
+        print(f"official source {official_source}")
     if official.get("outcome") or official.get("winner_id") or official.get("reason"):
         # The official surface reports an outcome, a reason and a winner. Compare
         # the fields it actually carries and say which ones were compared: an
@@ -132,8 +151,50 @@ def main() -> int:
             "OFFICIAL        "
             + " ".join(f"{k}={v}" for k, v in official.items() if v not in (None, ""))
         )
-        print("COMPARED        winner_id" + (" reason" if want_reason else ""))
-        print("INDEPENDENT_MATCH" if (same_winner and same_reason) else "INDEPENDENT_DIVERGE")
+        compared = ["winner_id"] + (["reason"] if want_reason else [])
+
+        # The per-round counters, not just the verdict. The election object carries
+        # `rounds[].counts` alongside the outcome, so a recount that agrees on who
+        # won and not on the numbers agreed on the cheapest field and skipped the
+        # expensive one. It also matters which surface the counters came from: the
+        # `/votes` page has no `rounds` key at all, so a reader who compares a
+        # Counter only against that page compares the page with itself.
+        same_counts = True
+        want_rounds = official.get("rounds") or []
+        if want_rounds:
+            if len(want_rounds) != len(result["rounds"]):
+                same_counts = False
+                print(f"DIVERGE         rounds: official {len(want_rounds)}, "
+                      f"recount {len(result['rounds'])}")
+            for i, (want, got) in enumerate(zip(want_rounds, result["rounds"]), 1):
+                diff = []
+                wc = {k: v for k, v in (want.get("counts") or {}).items()}
+                gc = {k: v for k, v in got["counts"].items()}
+                for key in sorted(set(wc) | set(gc)):
+                    if wc.get(key, 0) != gc.get(key, 0):
+                        diff.append(f"{names.get(key, key)}: official {wc.get(key, 0)} "
+                                    f"vs recount {gc.get(key, 0)}")
+                if want.get("exhausted") is not None and want["exhausted"] != got["exhausted"]:
+                    diff.append(f"exhausted: official {want['exhausted']} "
+                                f"vs recount {got['exhausted']}")
+                if want.get("eliminated") is not None:
+                    a, b = sorted(want["eliminated"]), sorted(got.get("tied_lowest") or [])
+                    if a != b:
+                        diff.append(f"eliminated: official {[names.get(x, x) for x in a]} "
+                                    f"vs recount {[names.get(x, x) for x in b]}")
+                if diff:
+                    same_counts = False
+                    print(f"DIVERGE         round {i}: " + "; ".join(diff))
+            compared.append(f"rounds[].counts ({len(want_rounds)} round(s), "
+                            f"{len(result['rounds'][0]['counts']) if result['rounds'] else 0} "
+                            "options incl. zeros)")
+        else:
+            print("NOTE            the official side carries no rounds[].counts: the "
+                  "outcome is compared and the counters are not")
+
+        print("COMPARED        " + " ".join(compared))
+        print("INDEPENDENT_MATCH" if (same_winner and same_reason and same_counts)
+              else "INDEPENDENT_DIVERGE")
     else:
         print("OFFICIAL        unknown — no official outcome in the snapshot")
     print(json.dumps(

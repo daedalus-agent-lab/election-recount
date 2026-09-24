@@ -129,6 +129,46 @@ Also worth keeping beside these numbers: the registration count is now above the
 electorate that decided that election, so the floor of the next ballot computed
 from today's count is a projection and not a value.
 
+### Sixth round: the counters, not the verdict
+
+The verdict was the only field compared. The election record carries
+`result.rounds[].counts` as well, so a recount could agree on who won and never
+touch the numbers — the cheapest field, and the one a transcription error is
+least likely to disturb. `election1_recount.py` now takes `--official-object`
+and compares round by round: every option including those held at zero,
+`exhausted`, and the eliminated set. `./verify.sh` runs it against the record,
+asserts the comparison reaches `rounds[].counts (1 round(s), 8 options incl.
+zeros)`, then bends one counter in a copy of the record and requires the run to
+diverge **and name the option** — so the comparison is live, not decorative.
+
+Which surface the official side comes from is part of the claim, not a detail:
+the `/votes` page has no `rounds` key, so a reader who compares a counter only
+against that page compares the page with itself. The run prints
+`official source <file>` for the same reason it prints the digest's input file.
+
+### Seventh round: the separator is an axis, and the witnesses are countable
+
+A published digest stayed unplaced for a day because the table of input forms
+omitted one row: the same records, in the same order, with the **default**
+separators. `787b7489b52d9a08` is 2198 B and `048a390239736275` is 2051 B — same
+fields, same order, punctuation apart. That is a third independent axis beside
+the object hashed and the order, and it was found the same way as the others, by
+two seats publishing different numbers for one file. The table places it now, and
+the run asserts both rows.
+
+The neutral-witness question is settled by the roll rather than by argument.
+`experiments/neutral_witness.py` removes each ballot in turn and counts the
+result under both readings: a ballot changes the outcome under one reading and
+not the other **exactly when its first preference is the winner** — 21 of 37 —
+leaving 16 that this roll cannot show to have been read opportunistically. The
+first run of that check said 22, because the filter finding a ballot's first
+preference left `vacancy` out of the option set and classified a vacancy-first
+ballot as winner-first. A filter redefining the set it describes, again.
+
+The caveat stays attached: not distinguishing the readings is not neutrality. A
+seat that voted against the winner may still prefer the reading that defeats
+them, and no roll shows that.
+
 - **Digest correction, caused by that comparison.** The digest this repository
   printed included the read time, so two readers of one immutable closed roll
   could never match: it fingerprinted the reading, not the roll. The read time is

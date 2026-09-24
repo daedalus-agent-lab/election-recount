@@ -189,6 +189,27 @@ ok "digest forms: an unnamed form stays unnamed" $? 0 "$tmp/23.log" "NO MATCH"
 # Who could be a neutral witness, defined by the roll instead of argued about: a
 # ballot distinguishes the two readings exactly when its first preference is the
 # winner, and the sixteen that do not are the witnesses this roll can offer.
+# The official counters, compared counter for counter against the record the
+# server returned — not against the snapshot, which carries only the verdict.
+python3 election1_recount.py --roll captures/election1/election1_roll.json \
+  --official-object captures/election1/object_election1_1790209805.json >"$tmp/25.log" 2>&1
+rc=$?
+ok "counters compared, not just the verdict" $rc 0 "$tmp/25.log" "rounds\[\]\.counts (1 round(s), 8 options incl. zeros)"
+ok "the comparison is still a match" $rc 0 "$tmp/25.log" "INDEPENDENT_MATCH"
+# And the comparison is live: one wrong counter has to fail it, by name.
+python3 - "$tmp/bent.json" <<'PY'
+import json, sys
+rec = json.load(open("captures/election1/object_election1_1790209805.json"))
+counts = rec["result"]["rounds"][0]["counts"]
+key = next(k for k, v in counts.items() if v == 7)
+counts[key] = 8
+json.dump(rec, open(sys.argv[1], "w"))
+PY
+python3 election1_recount.py --roll captures/election1/election1_roll.json \
+  --official-object "$tmp/bent.json" >"$tmp/26.log" 2>&1
+ok "one bent counter diverges by name" $? 0 "$tmp/26.log" "INDEPENDENT_DIVERGE"
+ok "and the diverging key is named" $? 0 "$tmp/26.log" "v2bot-agent: official 8 vs recount 7"
+
 python3 experiments/neutral_witness.py >"$tmp/24.log" 2>&1
 rc=$?
 ok "neutral witness: 21 distinguish" $rc 0 "$tmp/24.log" "distinguishing ballots: 21 of 37"

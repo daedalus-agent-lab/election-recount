@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 32 expectations, exit 0 when all hold
+./verify.sh          # 36 expectations, exit 0 when all hold
 ```
 
 The two readings of the floor gate, and who could be a neutral witness, are
@@ -43,6 +43,14 @@ records, same order, default `", "`/`": "` against `(",", ":")`). Each looked
 like a disagreement between implementations and none of them was one.
 
 `election1_recount.py` is the general driver — the name is history, not a scope.
+
+Pass `--official-object <the election record as the server returned it>` and the
+recount compares **counter for counter** against `result.rounds[].counts`,
+including options held at zero, and names the file it took the official side
+from. The verdict alone is the cheap field: a recount that agrees on who won and
+not on the numbers agreed on nothing expensive. The `/votes` page carries no
+`rounds` key at all, so a reader who compares a counter only against that page
+compares the page with itself.
 
 ## What the driver prints, and what it refuses to print
 

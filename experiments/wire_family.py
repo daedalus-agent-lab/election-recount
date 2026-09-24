@@ -57,11 +57,34 @@ def digest(obj, **kw) -> tuple[int, str]:
     return len(raw), hashlib.sha256(raw).hexdigest()[:16]
 
 
+def comma_digest(seqs) -> tuple[int, str]:
+    raw = ",".join(str(s) for s in seqs).encode("utf-8")
+    return len(raw), hashlib.sha256(raw).hexdigest()[:16]
+
+
+def rotate_cast_at(items: list[dict]) -> list[dict]:
+    """Move each cast_at to the next ballot so cast_at stops following seq.
+
+    A deterministic edit, so the numbers it produces are reproducible. The
+    point is not the edit: it is that the same twelve forms produce a different
+    number of distinct digests on a roll where the timestamps do not follow the
+    sequence, which makes "twelve forms, eight numbers" a statement about this
+    roll and not about the recipe.
+    """
+    out = [dict(it) for it in items]
+    stamps = [it["cast_at"] for it in items]
+    for i, it in enumerate(out):
+        it["cast_at"] = stamps[(i + 1) % len(stamps)]
+    return out
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--page", default=str(PAGE))
     ap.add_argument("--target", default=PUBLISHED,
                     help="a published digest to place in the family")
+    ap.add_argument("--shuffle-cast-at", action="store_true",
+                    help="rotate the timestamps so cast_at stops following seq")
     args = ap.parse_args()
 
     page = json.loads(Path(args.page).read_text(encoding="utf-8"))
@@ -69,6 +92,24 @@ def main() -> int:
     print(f"page            {Path(args.page).name}  ({len(items)} elements)")
     print("wire, top object:", " ".join(page.keys()))
     print("wire, element   :", " ".join(items[0].keys()))
+
+    # Whether two of the named outer orders are the same order is a property of
+    # the roll, not of the list of names. Where the timestamps follow the
+    # sequence, "by seq" and "by cast_at" are one order wearing two names, and
+    # counting digests without saying so charges the recipe for the data.
+    realised: dict[tuple, list[str]] = {}
+    for oname, fn in ORDERS.items():
+        realised.setdefault(tuple(e["seq"] for e in fn(items)), []).append(oname)
+    same = [names for names in realised.values() if len(names) > 1]
+    print(f"outer orders    {len(realised)} distinct of {len(ORDERS)} named",
+          "(one order, two names: " + "; ".join(" == ".join(n) for n in same) + ")"
+          if same else "(all distinct)")
+    if args.shuffle_cast_at:
+        items = rotate_cast_at(items)
+        realised = {}
+        for oname, fn in ORDERS.items():
+            realised.setdefault(tuple(e["seq"] for e in fn(items)), []).append(oname)
+        print(f"                timestamps rotated: now {len(realised)} distinct orders")
     print()
 
     rows: list[tuple[int, str, str, str]] = []
@@ -86,6 +127,18 @@ def main() -> int:
         print(f"{n:>7}  {h}  {oname:<28} {cname}{mark}")
     print()
     print(f"forms {len(rows)}   distinct lengths {len(lengths)}   distinct digests {len(digests)}")
+    print(f"                over {len(realised)} distinct outer order(s), so the digest count "
+          "is a property of this roll")
+
+    # The same leak in a family nobody calls a serialisation: a comma-joined
+    # string of the sequence numbers. Two orders, one length, two numbers.
+    seqs_seq = [e["seq"] for e in sorted(items, key=lambda e: e["seq"])]
+    seqs_wire = [e["seq"] for e in items]
+    a, b = comma_digest(seqs_wire), comma_digest(seqs_seq)
+    print()
+    print(f"comma-joined seqs, wire order {a[0]} B {a[1]}")
+    print(f"comma-joined seqs, by seq     {b[0]} B {b[1]}"
+          f"{'   <- same length, other number' if a[1] != b[1] and a[0] == b[0] else ''}")
 
     placed = [r for r in rows if r[1] == args.target]
     if placed:
@@ -114,7 +167,6 @@ def main() -> int:
     print("                 length identifies the object; the call is identified "
           "only by naming it")
     return 0
-
 
 if __name__ == "__main__":
     raise SystemExit(main())

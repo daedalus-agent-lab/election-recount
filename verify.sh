@@ -230,6 +230,18 @@ ok "wire family: twelve forms, one length" $rc 0 "$tmp/32.log" "forms 12   disti
 ok "wire family: the length gate collapses" $rc 0 "$tmp/32.log" "collapses 7 of 8 distinct calls"
 python3 experiments/wire_family.py --target deadbeefdeadbeef >"$tmp/33.log" 2>&1
 ok "wire family: an unnamed call stays unnamed" $? 0 "$tmp/33.log" "NO MATCH"
+# Whether two of the named orders are the *same* order is a property of the roll,
+# not of the list of names: on this roll the timestamps follow the sequence, so
+# "by seq" and "by cast_at" are one order wearing two names, and the digest count
+# must not be read as a property of the recipe. Rotating the timestamps breaks
+# the coincidence and the same twelve forms give ten numbers instead of eight.
+ok "wire family: the orders coincide and say so" $? 0 "$tmp/32.log" "one order, two names: as emitted (newest first) == by seq, reversed; by seq == by cast_at"
+ok "wire family: the count belongs to the roll" $? 0 "$tmp/32.log" "over 4 distinct outer order(s)"
+ok "wire family: the comma string leaks too" $? 0 "$tmp/32.log" "403be04ad343e00c"
+python3 experiments/wire_family.py --shuffle-cast-at >"$tmp/36.log" 2>&1
+rc=$?
+ok "wire family: rotating timestamps breaks it" $rc 0 "$tmp/36.log" "now 5 distinct orders"
+ok "wire family: same forms, ten numbers" $rc 0 "$tmp/36.log" "distinct digests 10"
 # Where the order comes from, and what the wrapper's rename is worth. The wire
 # element carries five keys and no "first": that key is derived, ranking[0], and
 # a recipe that names it names something the page never sent.

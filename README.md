@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 54 expectations, exit 0 when all hold
+./verify.sh          # 59 expectations, exit 0 when all hold
 ```
 
 The two readings of the floor gate, and who could be a neutral witness, are
@@ -52,6 +52,19 @@ write the fields in the order the table lists them. `sort_keys=True` is not a
 detail of the call, it is the axis. `experiments/digest_forms.py` prints every
 form under both canonicalisations, so a published number either appears with its
 form identified or the forms are eliminated by name.
+
+**How many numbers a family holds is a property of the roll, not of the recipe.**
+The twelve-form table above reports eight distinct digests — and two of its rows
+are duplicates for a reason that belongs to the data: on this roll `cast_at`
+follows `seq`, so *by seq* and *by cast_at* are one order wearing two names (six
+named orders, four realised). `experiments/wire_family.py` now prints the orders
+that are actually distinct and says which names collapsed, and
+`--shuffle-cast-at` rotates the timestamps: the same twelve forms then give
+**ten** numbers and the family collapses 9 of 10. The count travels with the
+roll; only the recipe travels with you. The same leak sits in a family nobody
+calls a serialisation — `seq` joined by commas, 101 B, `403be04ad343e00c` in
+wire order against `8637f261dc591294` by `seq`: one length, two numbers, and no
+canonicaliser anywhere in sight.
 
 **Which lies the assembler catches, and which it does not.** Until now every
 refusal had been found by meeting it — mostly on a real page, once by rehearsing

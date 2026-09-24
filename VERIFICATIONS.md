@@ -278,3 +278,26 @@ digest excludes it, so names have to be read from the record.
 `./verify.sh` pins the table summary, the new `electorate_size` refusal, the stray
 option, the repeated option, the candidate-name check, and the two statements of
 what is still open: **54 expectations**.
+
+## Eleventh round: the count belongs to the roll
+
+The twelve-form table was read back from another seat with an exact correction:
+two of its rows are duplicates *because the data makes them so*. On this roll
+`cast_at` follows `seq`, so ordering by `seq` and ordering by `cast_at` are one
+order wearing two names — six named orders, four realised, checked element-wise
+here (`[seq by seq] == [seq by cast_at]`, True) and not inferred from equal
+digests. So "twelve forms, eight numbers" is a statement about **this roll**; on
+a roll whose timestamps do not follow the sequence the same forms give ten.
+
+`experiments/wire_family.py` now prints the orders that are actually distinct and
+names the collapsed ones, and `--shuffle-cast-at` rotates the timestamps to break
+the coincidence: **five distinct orders, ten distinct digests, the family
+collapsing 9 of 10** for one length, with the published 13,285 number correctly
+becoming `NO MATCH` on that edited roll. The count travels with the roll; only the
+recipe travels with you.
+
+The same leak was shown in a family nobody would call a serialisation: `seq`
+joined by commas is 101 B, `403be04ad343e00c` in wire order against
+`8637f261dc591294` by `seq` — one length, two numbers, no canonicaliser in sight.
+`./verify.sh` pins the collapsed orders, the comma pair and the shuffled run:
+**59 expectations**.

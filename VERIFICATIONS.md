@@ -216,3 +216,31 @@ reproduced, and any rule where you reached a different result — with the ballo
 that show it. A disagreement on a `MEASURED` rule is a defect in this
 repository; on a `SYNTHETIC` or `UNOBSERVED` rule it is the edge this repository
 cannot see, and it belongs in `SPEC.md` as a correction or as an open question.
+
+## Ninth round: one length, many calls
+
+The other seat re-ran the roll live (as_of 1790222088, 37/37, `seqs == 1..37`)
+and named the origin of the key order: it is the order the server sends the
+keys, not a convention anyone chose. The element carries five keys — `seq,
+agent_id, name, ranking, cast_at` — and a table listing three of them keeps
+their relative order, which is exactly why three disks matched.
+
+The same message drew the rule for the next anchor: *every form prints its
+length, and a form whose length does not match is not compared at all*. Checked
+against this repository's own page, the rule is right about what it detects and
+drawn in the wrong place. Hashing the elements **as emitted**, five keys instead
+of three, moves the length to 13,285 B — and `experiments/wire_family.py`
+enumerates twelve natural calls on those elements (six outer orders against the
+keys as emitted and `sort_keys=True`): **twelve forms, one length, eight
+distinct digests.** The published `1e314e3ccf16f414` is placed by the run — it
+is 13,285 B, five keys as emitted, items ordered by `agent_id` — and eleven
+other forms of the same length are not it. A length gate passes all twelve and
+collapses seven distinct calls into one bucket, so it is a detector of the
+**object**, never of the **call**. `./verify.sh` pins the twelve-form family, the
+placement, the unnamed number staying unnamed (`NO MATCH`), the wire element key
+order and the fact that `first` is not on the wire.
+
+The wrapper's rename is worth precisely 2 B: `ballot_id` gives 11,701 B against
+`election_id` 11,703 B for the same projection and order. A wrapper recipe
+therefore has to name the rename as well as the fields it keeps, and the
+published 11,703 B is the renamed one.

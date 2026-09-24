@@ -217,6 +217,45 @@ ok "digest forms: its wrapped sibling too" $? 0 "$tmp/30.log" "LITERAL KEY ORDER
 python3 experiments/digest_forms.py --target 0de75664aaa2d270 >"$tmp/31.log" 2>&1
 ok "digest forms: literal order, default seps" $? 0 "$tmp/31.log" "LITERAL KEY ORDER {seq, first}"
 
+# The key order is the wire order, and the length column is not a gate that can
+# certify a comparison. Hashing the elements as they are emitted (five keys
+# instead of three) moves the length to 13,285 B -- and twelve natural calls on
+# those same five-key elements all give 13,285 B with eight different digests.
+# A form that passes the length gate is not thereby the same call, so "print the
+# length, compare only on a match" is a detector of the object, not of the call.
+python3 experiments/wire_family.py >"$tmp/32.log" 2>&1
+rc=$?
+ok "wire family: the published 13285 number" $rc 0 "$tmp/32.log" "MATCH  1e314e3ccf16f414 is 13285 B"
+ok "wire family: twelve forms, one length" $rc 0 "$tmp/32.log" "forms 12   distinct lengths 1"
+ok "wire family: the length gate collapses" $rc 0 "$tmp/32.log" "collapses 7 of 8 distinct calls"
+python3 experiments/wire_family.py --target deadbeefdeadbeef >"$tmp/33.log" 2>&1
+ok "wire family: an unnamed call stays unnamed" $? 0 "$tmp/33.log" "NO MATCH"
+# Where the order comes from, and what the wrapper's rename is worth. The wire
+# element carries five keys and no "first": that key is derived, ranking[0], and
+# a recipe that names it names something the page never sent.
+python3 - <<'PY' >"$tmp/34.log" 2>&1
+import json, hashlib, sys
+page = json.load(open("captures/election1/roll_page_election1_asof1790209816.json"))
+el, it = page["items"][0], page["items"]
+wire = list(el.keys())
+if wire != ["seq", "agent_id", "name", "ranking", "cast_at"]:
+    sys.exit(f"FAIL: the element key order moved: {wire}")
+if "first" in json.dumps(el):
+    sys.exit("FAIL: the page now sends 'first'; the derived-key note is stale")
+def n(o):
+    return len(json.dumps(o, ensure_ascii=False, sort_keys=True,
+                         separators=(",", ":")).encode())
+tri = [{"seq": e["seq"], "agent_id": e["agent_id"], "ranking": e["ranking"]}
+       for e in sorted(it, key=lambda e: e["agent_id"])]
+a, b = n({"election_id": page["ballot_id"], "items": tri, "votes_cast": page["votes_cast"]}), \
+       n({"ballot_id": page["ballot_id"], "items": tri, "votes_cast": page["votes_cast"]})
+if a - b != 2:
+    sys.exit(f"FAIL: the rename is worth {a - b} B, not 2")
+print("wire element keys:", " ".join(wire), "| no 'first' on the wire (derived)")
+print(f"the wrapper's rename ballot_id -> election_id is worth {a - b} B ({b} -> {a})")
+PY
+ok "the wire order and a rename" $? 0 "$tmp/34.log" "no 'first' on the wire"
+
 # Who could be a neutral witness, defined by the roll instead of argued about: a
 # ballot distinguishes the two readings exactly when its first preference is the
 # winner, and the sixteen that do not are the witnesses this roll can offer.

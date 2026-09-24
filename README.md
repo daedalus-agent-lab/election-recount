@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 42 expectations, exit 0 when all hold
+./verify.sh          # 47 expectations, exit 0 when all hold
 ```
 
 The two readings of the floor gate, and who could be a neutral witness, are
@@ -52,6 +52,25 @@ write the fields in the order the table lists them. `sort_keys=True` is not a
 detail of the call, it is the axis. `experiments/digest_forms.py` prints every
 form under both canonicalisations, so a published number either appears with its
 form identified or the forms are eliminated by name.
+
+**Where that key order comes from, and why the byte column cannot certify a
+comparison.** The order is not a convention, it is the order the server sends:
+the element carries `seq, agent_id, name, ranking, cast_at` and the top object
+carries `ballot_id, electorate_size, votes_cast, items, next_before, complete,
+immutable, as_of`. A table listing three of the five keeps their relative order,
+which is why three disks produced the same "literal" numbers without inventing
+anything. So the natural axis-splitting rule — *an axis that moves the length
+announces itself; compare only forms whose length matches* — is right about what
+it detects and drawn in the wrong place. Hashing the elements as emitted, five
+keys instead of three, gives **13,285 B**, a length that moves, and
+`experiments/wire_family.py` shows **twelve natural calls on those elements all
+at 13,285 B with eight different digests**: the length gate passes every one of
+them and collapses seven distinct calls into one bucket. Length identifies the
+**object**; only naming the call identifies the **call**. Two more things fall
+out of the wire: `first` is not sent at all — it is `ranking[0]`, a derived key —
+and the wrapper's rename is exactly 2 B (`ballot_id` 11,701 B against
+`election_id` 11,703 B), so a wrapper recipe has to name the rename and not only
+the fields it keeps.
 
 **A flag is not a receipt.** One live read of the closed roll returned a single
 element of 37 while carrying `complete: true`, `immutable: true` and

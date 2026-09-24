@@ -160,6 +160,28 @@ python3 capture_roll.py --object "$tmp/o_e1.json" \
   --page fixtures/page_election1_oldest7_asof1790195441.json --out "$tmp/x.json" >"$tmp/9.log" 2>&1
 ok "refuse: no seq 1 in sight" $? 2 "$tmp/9.log" "the chain is broken"
 
+# A flag is not a receipt. One live read of the closed roll returned a single
+# element of 37 while carrying complete: true, immutable: true and votes_cast: 37
+# — every flag a reader might gate on said the read was whole. The fixture is that
+# page, and the assembler must refuse it on what is *absent* rather than on what is
+# asserted: a set of seq, not a self-description.
+python3 capture_roll.py --object "$tmp/o_e1.json" \
+  --page fixtures/page_election1_1of37_flag_true.json --out "$tmp/x.json" >"$tmp/27.log" 2>&1
+kk=$?
+ok "refuse: one element, every flag true" $kk 2 "$tmp/27.log" "the chain is broken: 36 seq(s) from 1 to 37 are absent"
+ok "and the refusal names the first gap" $kk 2 "$tmp/27.log" "first missing 1"
+# The same page with the flag set the other way is refused by the older check, so
+# the two gates cover each other rather than one carrying the case alone.
+python3 - "$tmp/liar.json" <<'PY'
+import json, sys
+p = json.load(open("fixtures/page_election1_1of37_flag_true.json"))
+p["complete"] = False
+json.dump(p, open(sys.argv[1], "w"))
+PY
+python3 capture_roll.py --object "$tmp/o_e1.json" \
+  --page "$tmp/liar.json" --out "$tmp/x.json" >"$tmp/28.log" 2>&1
+ok "one element, flag false: still refused" $? 2 "$tmp/28.log" "the chain is broken"
+
 # The counted election cannot show where the floor gate sits: it was decided with
 # support exactly equal to F. A perturbed roll can, and the two readings split.
 python3 experiments/stop_vs_continue.py >"$tmp/19.log" 2>&1
@@ -185,6 +207,15 @@ python3 experiments/digest_forms.py --target daa5b71ef83b0989 >"$tmp/22.log" 2>&
 ok "digest forms: a lookup can succeed" $? 0 "$tmp/22.log" "MATCH  the published number is the form"
 python3 experiments/digest_forms.py --target deadbeefdeadbeef >"$tmp/23.log" 2>&1
 ok "digest forms: an unnamed form stays unnamed" $? 0 "$tmp/23.log" "NO MATCH"
+# The key order inside the object: right length, wrong digest, for every form at
+# once. A whole family failing together at the correct byte counts is what makes
+# this look like a disagreement about the ballots instead of about the recipe.
+python3 experiments/digest_forms.py --target 7405a842ba43c593 >"$tmp/29.log" 2>&1
+ok "digest forms: literal key order placed" $? 0 "$tmp/29.log" "LITERAL KEY ORDER"
+python3 experiments/digest_forms.py --target ddab0e801ad481a1 >"$tmp/30.log" 2>&1
+ok "digest forms: its wrapped sibling too" $? 0 "$tmp/30.log" "LITERAL KEY ORDER wrapped"
+python3 experiments/digest_forms.py --target 0de75664aaa2d270 >"$tmp/31.log" 2>&1
+ok "digest forms: literal order, default seps" $? 0 "$tmp/31.log" "LITERAL KEY ORDER {seq, first}"
 
 # Who could be a neutral witness, defined by the roll instead of argued about: a
 # ballot distinguishes the two readings exactly when its first preference is the

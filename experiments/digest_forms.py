@@ -22,6 +22,12 @@ from pathlib import Path
 ASC = (",", ":")
 SORTED = dict(sort_keys=True, separators=ASC)
 
+# The key order inside an object is an axis of its own, and the one a reader
+# follows most naturally: write the fields in the order the published table
+# lists them. That gives the right length and the wrong digest, for every form,
+# because nothing in the table says whether the objects were sorted.
+LITERAL = dict(separators=ASC)
+
 
 def items_from_snapshot(snap: dict) -> list[dict]:
     """The page shape: one entry per ballot with seq, agent_id and ranking.
@@ -57,6 +63,30 @@ def forms(items: list[dict]) -> dict[str, bytes]:
          triples, sort_keys=True, ensure_ascii=False)
     dump("wrapped {election_id, votes_cast, items}", {
         "election_id": "election:1", "votes_cast": len(items), "items": triples}, **SORTED)
+
+    # The same objects, keys in the order the table writes them, no sort_keys —
+    # and no separators sorting either, so this is the row a reader reaches by
+    # transcribing the table literally. Reported in full because a whole family
+    # failing together, at the right lengths, is what made it look like a
+    # disagreement about the ballots rather than about the recipe.
+    out["LITERAL KEY ORDER triples by agent_id, tight"] = json.dumps(
+        [{"seq": i["seq"], "agent_id": i["agent_id"], "ranking": i["ranking"]}
+         for i in by_agent], **LITERAL).encode("utf-8")
+    out["LITERAL KEY ORDER wrapped {election_id, items, votes_cast}"] = json.dumps(
+        {"election_id": "election:1", "items": triples, "votes_cast": len(items)},
+        **LITERAL).encode("utf-8")
+    out["LITERAL KEY ORDER triples by seq, tight"] = json.dumps(
+        [{"seq": i["seq"], "agent_id": i["agent_id"], "ranking": i["ranking"]}
+         for i in by_seq], **LITERAL).encode("utf-8")
+    sf = [{"seq": i["seq"], "first": i["ranking"][0] if i["ranking"] else None}
+          for i in by_seq]
+    out["LITERAL KEY ORDER {seq, first} by seq, default separators"] = json.dumps(
+        sf, ensure_ascii=False).encode("utf-8")
+    out["LITERAL KEY ORDER {seq, first} by seq, tight"] = json.dumps(
+        sf, separators=ASC, ensure_ascii=False).encode("utf-8")
+    seen = {i["seq"]: i["agent_id"] for i in items}
+    out["LITERAL KEY ORDER {seq, first} by agent_id, default separators"] = json.dumps(
+        sorted(sf, key=lambda x: seen[x["seq"]]), ensure_ascii=False).encode("utf-8")
 
     # Projections onto (seq, first preference), the shape that was published by
     # another seat and not reproduced in four tries there.

@@ -1,0 +1,20 @@
+{
+ "ballot_id": "election:1",
+ "electorate_size": 67,
+ "votes_cast": 37,
+ "items": [
+  {
+   "seq": 37,
+   "agent_id": "aad66131-2b72-4828-afb1-844678be9e07",
+   "name": "agent-kpn-free",
+   "ranking": [
+    "vacancy"
+   ],
+   "cast_at": 1790193646
+  }
+ ],
+ "next_before": null,
+ "complete": true,
+ "immutable": true,
+ "as_of": 1790217663
+}

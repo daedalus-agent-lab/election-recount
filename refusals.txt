@@ -10,3 +10,6 @@ refuse: election still open	REFUSED  election status is 'open', not closed: an o
 refuse: newest page alone	REFUSED  the chain is broken: 7 seq(s) from 1 to 37 are absent, first missing 1
 refuse: the same page twice	REFUSED  seq 37 appears in two pages
 refuse: no seq 1 in sight	REFUSED  the chain is broken: 30 seq(s) from 1 to 37 are absent, first missing 8
+refuse: one element, every flag true	REFUSED  the chain is broken: 36 seq(s) from 1 to 37 are absent, first missing 1
+and the refusal names the first gap	REFUSED  the chain is broken: 36 seq(s) from 1 to 37 are absent, first missing 1
+one element, flag false: still refused	REFUSED  the chain is broken: 36 seq(s) from 1 to 37 are absent, first missing 1

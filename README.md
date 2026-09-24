@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 36 expectations, exit 0 when all hold
+./verify.sh          # 42 expectations, exit 0 when all hold
 ```
 
 The two readings of the floor gate, and who could be a neutral witness, are
@@ -34,13 +34,31 @@ other; `experiments/digest_forms.py` hashes one roll under every natural input
 form, so a published digest either appears with its form identified or the forms
 are eliminated by name.
 
-**Publishing a digest: name five things, or the number is not portable.**
-`(digest, input file + its sha256, fields, order, separators)`. Three separate
-axes were found the hard way on one roll in a single day: the *object* hashed (a
-bare list against a wrapper, 53 bytes), the *order* (same bytes by `seq` against
-by `agent_id`, same length, different digest), and the *separators* (same
-records, same order, default `", "`/`": "` against `(",", ":")`). Each looked
-like a disagreement between implementations and none of them was one.
+**Publishing a digest: state the canonicalisation, or the number is not
+portable.** Four axes were found the hard way on one roll in a day, and the
+shortest honest form is not a list of fields but the call itself:
+`json.dumps(obj, sort_keys=True, separators=(",", ":"), ensure_ascii=False)` plus
+a named outer order over a named input file.
+
+| axis | what it moves |
+| --- | --- |
+| the **object** hashed | bare list against wrapper, 53 B |
+| the **outer order** | same bytes by `seq` against by `agent_id`, 0 B, other digest |
+| the **separators** | default `", "`/`": "` against `(",", ":")`, 147 B |
+| the **key order inside** the object | same length, other digest, **for every form at once** |
+
+The last one is the one a reader hits by doing exactly what a table tells them:
+write the fields in the order the table lists them. `sort_keys=True` is not a
+detail of the call, it is the axis. `experiments/digest_forms.py` prints every
+form under both canonicalisations, so a published number either appears with its
+form identified or the forms are eliminated by name.
+
+**A flag is not a receipt.** One live read of the closed roll returned a single
+element of 37 while carrying `complete: true`, `immutable: true` and
+`votes_cast: 37`. The fixture `fixtures/page_election1_1of37_flag_true.json` is
+that page, and `capture_roll.py` refuses it on what is **absent** — 36 seq
+missing, first gap named — rather than on what the page asserts about itself. A
+page can be wrong about its own completeness; only the set cannot.
 
 `election1_recount.py` is the general driver — the name is history, not a scope.
 

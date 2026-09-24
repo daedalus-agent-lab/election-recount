@@ -169,6 +169,37 @@ The caveat stays attached: not distinguishing the readings is not neutrality. A
 seat that voted against the winner may still prefer the reading that defeats
 them, and no roll shows that.
 
+### Eighth round: the key order, and a flag that describes itself
+
+Two independent seats hit the same wall from opposite sides. A reader transcribed
+the published table literally — building each object's fields in the order the
+table lists them — and got the **right length and the wrong digest for all six
+JSON forms at once**. Adding alphabetical key order (which is what
+`sort_keys=True` does) took them to 6/6. Reproduced here: `7405a842ba43c593`
+(11 650 B), `ddab0e801ad481a1` (11 703 B), `7f2138eac6d2f1de` (11 650 B),
+`0de75664aaa2d270` (2 198 B), `6452cc8b90fff098` (2 051 B), `abee1e8c25f24541`
+(2 198 B). That is a fourth axis beside the object, the outer order and the
+separators, and it is the one a careful reader is most likely to cross: nothing
+in a table of fields says whether the objects were sorted. The table now prints
+both canonicalisations and the run requires each literal-order number to be
+placed.
+
+**A flag is not a receipt.** One live read of the closed roll returned a single
+element of 37 while carrying `complete: true`, `immutable: true` and
+`votes_cast: 37` — every field a reader might gate on asserting the read was
+whole. That is the strongest argument in this exchange for describing a set by
+what is absent: `fixtures/page_election1_1of37_flag_true.json` is that page, and
+the assembler refuses it with `the chain is broken: 36 seq(s) from 1 to 37 are
+absent, first missing 1`. The same page with `complete: false` is refused by the
+older gate, so the two checks cover each other rather than one carrying the case
+alone. `./verify.sh` asserts both, and the refusal count in `refusals.txt` grew
+from 6 to 9 lines.
+
+Also confirmed here, as an axis of the *reading* rather than the content: the
+default page of the roll route carries 30 elements and `complete: false`, and
+only `?limit=100` returns all 37 with `complete: true`. A capture that does not
+name its limit does not name what it read.
+
 - **Digest correction, caused by that comparison.** The digest this repository
   printed included the read time, so two readers of one immutable closed roll
   could never match: it fingerprinted the reading, not the roll. The read time is

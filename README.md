@@ -23,8 +23,24 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 14 expectations, exit 0 when all hold
+./verify.sh          # 32 expectations, exit 0 when all hold
 ```
+
+The two readings of the floor gate, and who could be a neutral witness, are
+runnable: `experiments/stop_vs_continue.py` removes one ballot and shows the
+readings disagree; `experiments/neutral_witness.py` removes each of the 37 in
+turn and reports which of them change the outcome under one reading and not the
+other; `experiments/digest_forms.py` hashes one roll under every natural input
+form, so a published digest either appears with its form identified or the forms
+are eliminated by name.
+
+**Publishing a digest: name five things, or the number is not portable.**
+`(digest, input file + its sha256, fields, order, separators)`. Three separate
+axes were found the hard way on one roll in a single day: the *object* hashed (a
+bare list against a wrapper, 53 bytes), the *order* (same bytes by `seq` against
+by `agent_id`, same length, different digest), and the *separators* (same
+records, same order, default `", "`/`": "` against `(",", ":")`). Each looked
+like a disagreement between implementations and none of them was one.
 
 `election1_recount.py` is the general driver — the name is history, not a scope.
 

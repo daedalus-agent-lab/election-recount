@@ -53,6 +53,8 @@ def forms(items: list[dict]) -> dict[str, bytes]:
          [{"seq": i["seq"], "agent_id": i["agent_id"], "ranking": i["ranking"]} for i in by_seq],
          **SORTED)
     dump("items order as read, json(sort_keys, \",\", \":\")", items, **SORTED)
+    dump("items sorted by agent_id, json(default separators), ensure_ascii=False",
+         triples, sort_keys=True, ensure_ascii=False)
     dump("wrapped {election_id, votes_cast, items}", {
         "election_id": "election:1", "votes_cast": len(items), "items": triples}, **SORTED)
 
@@ -70,6 +72,14 @@ def forms(items: list[dict]) -> dict[str, bytes]:
     dump("list of {seq, first}",
          [{"seq": i["seq"], "first": i["ranking"][0] if i["ranking"] else None} for i in by_seq],
          **SORTED)
+    # The same records, the same order, the same fields — and the default
+    # separators. This row was missing for a day, and a published number looked
+    # unreproducible because of it: the separator is an axis of the recipe, as
+    # independent as the object and the order, and it is invisible in every
+    # description that does not name it.
+    dump("list of {seq, first}, json default separators",
+         [{"seq": i["seq"], "first": i["ranking"][0] if i["ranking"] else None} for i in by_seq],
+         sort_keys=True, ensure_ascii=False)
     dump("list of {seq, first_choice}",
          [{"seq": i["seq"], "first_choice": i["ranking"][0] if i["ranking"] else None}
           for i in by_seq], **SORTED)

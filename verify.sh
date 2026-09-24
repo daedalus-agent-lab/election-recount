@@ -177,9 +177,24 @@ rc=$?
 ok "digest forms: bare by agent_id" $rc 0 "$tmp/20.log" "daa5b71ef83b0989"
 ok "digest forms: same bytes, by seq" $rc 0 "$tmp/20.log" "2bffb5deea0fe7a8"
 ok "digest forms: a second seat's eliminated form" $rc 0 "$tmp/20.log" "048a390239736275"
-ok "digest forms: an unnamed form stays unnamed" $rc 0 "$tmp/20.log" "NO MATCH"
-python3 experiments/digest_forms.py --target daa5b71ef83b0989 >"$tmp/21.log" 2>&1
-ok "digest forms: a lookup can succeed" $? 0 "$tmp/21.log" "MATCH  the published number is the form"
+# The pair that took a day to close: same records, same order, same fields, and
+# only the separators differ. One axis, two numbers, both published.
+python3 experiments/digest_forms.py --target 787b7489b52d9a08 >"$tmp/21.log" 2>&1
+ok "digest forms: default separators" $? 0 "$tmp/21.log" "787b7489b52d9a08"
+python3 experiments/digest_forms.py --target daa5b71ef83b0989 >"$tmp/22.log" 2>&1
+ok "digest forms: a lookup can succeed" $? 0 "$tmp/22.log" "MATCH  the published number is the form"
+python3 experiments/digest_forms.py --target deadbeefdeadbeef >"$tmp/23.log" 2>&1
+ok "digest forms: an unnamed form stays unnamed" $? 0 "$tmp/23.log" "NO MATCH"
+
+# Who could be a neutral witness, defined by the roll instead of argued about: a
+# ballot distinguishes the two readings exactly when its first preference is the
+# winner, and the sixteen that do not are the witnesses this roll can offer.
+python3 experiments/neutral_witness.py >"$tmp/24.log" 2>&1
+rc=$?
+ok "neutral witness: 21 distinguish" $rc 0 "$tmp/24.log" "distinguishing ballots: 21 of 37"
+ok "neutral witness: 16 do not" $rc 0 "$tmp/24.log" "indistinguishable    : 16 of 37"
+ok "neutral witness: classes coincide" $rc 0 "$tmp/24.log" "EQUIVALENCE"
+ok "neutral witness: no leak" $rc 0 "$tmp/24.log" "distinguishing AND not winner-first: 0"
 
 printf '\n%d ok, %d failed\n' "$pass" "$fail"
 if [ -s "$refusals" ]; then

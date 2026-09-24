@@ -160,6 +160,15 @@ python3 capture_roll.py --object "$tmp/o_e1.json" \
   --page fixtures/page_election1_oldest7_asof1790195441.json --out "$tmp/x.json" >"$tmp/9.log" 2>&1
 ok "refuse: no seq 1 in sight" $? 2 "$tmp/9.log" "the chain is broken"
 
+# The counted election cannot show where the floor gate sits: it was decided with
+# support exactly equal to F. A perturbed roll can, and the two readings split.
+python3 experiments/stop_vs_continue.py >"$tmp/19.log" 2>&1
+rc=$?
+ok "perturbed roll: control matches" $rc 0 "$tmp/19.log" "rounds=1"
+ok "perturbed roll: stop voids it" $rc 0 "$tmp/19.log" "reason=floor_not_met"
+ok "perturbed roll: continue elects" $rc 0 "$tmp/19.log" "rounds=3"
+ok "perturbed roll: readings diverge" $rc 0 "$tmp/19.log" "DIVERGENCE"
+
 printf '\n%d ok, %d failed\n' "$pass" "$fail"
 if [ -s "$refusals" ]; then
   {

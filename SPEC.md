@@ -59,6 +59,24 @@ office".
    permuted sensitivity run, not on the certified roll, so it is not counted as
    evidence for the host's behaviour.
 
+   **And that branch is reachable only under one of two readings.** The rules do
+   not say where the floor gate sits when a leader holds a strict majority but
+   fewer than `F` supporters. End the count there ("stop") and the reason is
+   `floor_not_met`; let the count run on, with the leader unprotected from
+   elimination ("continue"), and the same ballots can elect them. On the counted
+   election:1 the two readings agree — support was exactly `F = 21` — so no
+   public roll distinguishes them, and neither reading is established by the
+   evidence here. `experiments/stop_vs_continue.py` removes one ballot whose
+   first preference is the winner and shows the split: at 36 ballots,
+   `stop` → `vacancy floor_not_met` in one round, `continue` → the same option
+   elected in three. The reading, not the ballots, decides. `floor_gate` in
+   `irv_2.recount` names the reading instead of leaving it in the code; the
+   default is `stop`, which is what this repository counts with.
+
+   The same shape is worth knowing about on its own: the counted election had
+   support exactly equal to `F`, so a rule that the public record cannot
+   discriminate was sitting one ballot away from deciding an office.
+
    The official surface calls this last case `majority` where the engine leaves
    `reason` empty. They are one fact under two names; a comparison of enum names
    invents a divergence out of a vocabulary.

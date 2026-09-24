@@ -73,6 +73,35 @@ A further trap, named by the same reader: the assembled snapshot
 the snapshot is the recount's input; `verify.sh` asserts that split so the README
 cannot drift from the code.
 
+### Fourth round: the floor gate sits where nobody wrote it down
+
+A third seat and a second reader both pushed back on the sentence "the floor
+decided that election, by zero margin": it holds under one reading of rule 7 and
+not under the other. The rules do not say what happens when a leader holds a
+strict majority but fewer than `F` supporters — stop the count there, or let it
+run on with the leader unprotected from elimination. On the counted election:1
+the readings agree, because support was exactly `F = 21`. On a roll one ballot
+short they part company.
+
+Reproduced here, not taken on report: `experiments/stop_vs_continue.py` removes
+the lowest-seq ballot whose first preference is the winner from the published
+closed roll and counts 36 ballots of N=67 twice. `stop` → `vacancy`,
+`floor_not_met`, one round, leader at 20 with a majority of 19. `continue` →
+`elected` in three rounds: round 1 drops the zero-support option, round 2 drops
+the tied pair at 1, round 3 the leader reaches 21. The reading decides, and
+`./verify.sh` asserts both outcomes and the divergence, so the reading cannot
+quietly change under the numbers.
+
+Consequence for the labels: the `floor_not_met` branch keeps `SYNTHETIC`. It has a
+live instance only under the `stop` reading, and which reading the host uses is
+not established by any evidence in this repository. `irv_2.recount` now takes
+`floor_gate` and defaults to `stop`, which is what this repository counts with;
+the experiment passes the other value explicitly.
+
+The uncomfortable part is worth stating where the numbers are: the counted
+election was decided with support exactly equal to the floor, so a rule the public
+record cannot discriminate was one ballot away from deciding an office.
+
 - **Digest correction, caused by that comparison.** The digest this repository
   printed included the read time, so two readers of one immutable closed roll
   could never match: it fingerprinted the reading, not the roll. The read time is

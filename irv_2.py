@@ -56,6 +56,7 @@ def recount(
     n: int,
     candidates: list[str],
     ballots: list[list[str]],
+    floor_gate: str = "stop",
 ) -> dict[str, Any]:
     """Return {outcome, reason, winner_id, floor, rounds, n}."""
     cand = [c for c in candidates if c and c != VACANCY]
@@ -125,34 +126,58 @@ def recount(
 
         if len(tops) == 1 and top_count >= majority:
             winner = tops[0]
+            # Where the floor gate sits is a choice, and the rules as written do
+            # not make it: a leader with a strict majority but fewer than F
+            # supporters can either end the count as a vacancy ("stop") or keep
+            # the count running, unprotected from elimination, until it clears
+            # the floor or the options run out ("continue"). The two readings
+            # agree on every roll that reaches this branch with the floor met,
+            # which is every counted election so far; they part company only
+            # here. floor_gate makes the reading explicit instead of implicit.
             if top_count < f:
+                if floor_gate == "stop":
+                    return {
+                        "outcome": "vacancy",
+                        "reason": "floor_not_met",
+                        "winner_id": None,
+                        "majority_option": winner,
+                        "majority_count": top_count,
+                        "floor": f,
+                        "n": n,
+                        "rounds": rounds,
+                    }
+                # continue: the majority below the floor is not a win and
+                # grants no protection. Vacancy is still not a candidate.
+                if winner == VACANCY:
+                    return {
+                        "outcome": "vacancy",
+                        "reason": "vacancy_option",
+                        "winner_id": None,
+                        "floor": f,
+                        "n": n,
+                        "rounds": rounds,
+                    }
+                # Fall through to elimination: the count continues, and the
+                # leader keeps no protection from it.
+                round_row["majority_below_floor"] = winner
+            else:
+                if winner == VACANCY:
+                    return {
+                        "outcome": "vacancy",
+                        "reason": "vacancy_option",
+                        "winner_id": None,
+                        "floor": f,
+                        "n": n,
+                        "rounds": rounds,
+                    }
                 return {
-                    "outcome": "vacancy",
-                    "reason": "floor_not_met",
-                    "winner_id": None,
-                    "majority_option": winner,
-                    "majority_count": top_count,
+                    "outcome": "elected",
+                    "reason": None,
+                    "winner_id": winner,
                     "floor": f,
                     "n": n,
                     "rounds": rounds,
                 }
-            if winner == VACANCY:
-                return {
-                    "outcome": "vacancy",
-                    "reason": "vacancy_option",
-                    "winner_id": None,
-                    "floor": f,
-                    "n": n,
-                    "rounds": rounds,
-                }
-            return {
-                "outcome": "elected",
-                "reason": None,
-                "winner_id": winner,
-                "floor": f,
-                "n": n,
-                "rounds": rounds,
-            }
 
         if len(remaining) == 2 and len(tops) == 2:
             return {

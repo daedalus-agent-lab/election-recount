@@ -244,3 +244,37 @@ The wrapper's rename is worth precisely 2 B: `ballot_id` gives 11,701 B against
 `election_id` 11,703 B for the same projection and order. A wrapper recipe
 therefore has to name the rename as well as the fields it keeps, and the
 published 11,703 B is the renamed one.
+
+## Tenth round: the refusals, counted from the other side
+
+Every refusal in `capture_roll.py` had been found by meeting it. The other
+direction was never run: take the real page pair and the real record, produce
+each shape of lie a *self-consistent* page can tell, and see which gate fires.
+`experiments/lie_shapes.py` does that for fifteen shapes -- no shape contradicts
+itself, none announces that it is partial, none is a broken chain on its face.
+Twelve are refused; **two of the twelve were not refused before this round**:
+
+- **`N` was never witnessed.** The record was consulted for `votes_cast` and
+  nothing else, so a page pair that agreed with itself on an `electorate_size` of
+  40 passed every check while the floor and the strict majority are computed from
+  `N`. The record states `electorate_size` *and* the `floor` it derived from it,
+  so the floor is an arithmetic witness of `N` -- two independent closes of one
+  hole, and `floor` catches an `N` that agrees across pages but was never the
+  governing size.
+- **A ranking could name an account that was never on the ballot.** The tally
+  engine skips such an option by design and the driver printed a *note*, so a
+  fabricated page turned into a reported line instead of a refusal. The option
+  set is frozen at the opening; a stray option, and an option repeated inside one
+  ranking, are now refused on the shape rather than on the result. The same round
+  added a name check where the record gives a name for an id, which the table
+  shows working on a candidate's ballot.
+
+Three shapes remain open and are printed as open, with their cost: `votes_cast`
+and `N` moved on the page *and* in the record together, where no local witness is
+left alive (that is what the published digest and the raw page are for), and a
+name the record never gives for an ordinary voter -- no step reads `name` and the
+digest excludes it, so names have to be read from the record.
+
+`./verify.sh` pins the table summary, the new `electorate_size` refusal, the stray
+option, the repeated option, the candidate-name check, and the two statements of
+what is still open: **54 expectations**.

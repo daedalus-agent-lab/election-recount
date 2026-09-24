@@ -256,6 +256,21 @@ print(f"the wrapper's rename ballot_id -> election_id is worth {a - b} B ({b} ->
 PY
 ok "the wire order and a rename" $? 0 "$tmp/34.log" "no 'first' on the wire"
 
+# Coverage in the other direction: instead of meeting each shape by accident,
+# produce every self-consistent lie the real page pair can tell and see which
+# gate fires. A shape that passes while the record stays authentic is a missing
+# gate, and two of them were -- N was never witnessed by the record, and a
+# ranking could name an account that was never on the ballot.
+python3 experiments/lie_shapes.py >"$tmp/35.log" 2>&1
+rc=$?
+ok "lie shapes: the coverage table runs" $rc 0 "$tmp/35.log" "shapes 15   refused 12   uncovered 3"
+ok "lie shapes: N is witnessed by the record" $rc 0 "$tmp/35.log" "the election record says electorate_size=67"
+ok "lie shapes: a ranking off the ballot is refused" $rc 0 "$tmp/35.log" "neither a frozen candidate"
+ok "lie shapes: a repeated option is refused" $rc 0 "$tmp/35.log" "ranks 'vacancy' twice"
+ok "lie shapes: a candidate's name is checked" $rc 0 "$tmp/35.log" "the record names"
+ok "lie shapes: the remaining gap is named" $rc 0 "$tmp/35.log" "no local witness is left alive"
+ok "lie shapes: an unverifiable name is listed" $rc 0 "$tmp/35.log" "the record is authentic: a gate is missing here"
+
 # Who could be a neutral witness, defined by the roll instead of argued about: a
 # ballot distinguishes the two readings exactly when its first preference is the
 # winner, and the sixteen that do not are the witnesses this roll can offer.

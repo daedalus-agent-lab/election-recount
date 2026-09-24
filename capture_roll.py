@@ -16,6 +16,8 @@ Refusals (exit 2), each with the reason printed:
   * the page holding seq 1 still carries next_before, or does not report itself
     complete: the oldest ballots were never reached
   * the pages disagree on votes_cast / electorate_size / ballot_id
+  * the record and the pages disagree on votes_cast or on electorate_size, or the
+    record's floor is not the floor of the N the pages report
   * two items share a seq, or a seq is above votes_cast
   * the election object is not closed and --preview was not asked for: an open
     election's electorate_size is not the governing N, and a mid-window snapshot
@@ -32,6 +34,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 
 
@@ -68,6 +71,25 @@ def main() -> int:
     if "votes_cast" in obj and obj["votes_cast"] not in votes_cast:
         fail(f"the election record says votes_cast={obj['votes_cast']}, the page(s) claim "
              f"{sorted(votes_cast)} — one of them was read at another moment")
+    # votes_cast is not the only number the record can witness, and it was the
+    # only one checked for a while: electorate_size was taken from the page on
+    # trust. It is not a display field — the floor and the strict majority are
+    # both computed from it, so a page whose N moved changes who wins while
+    # contradicting nothing on its face. Two witnesses close it. The record
+    # states N, and it also states the floor it derived from N, so the floor is
+    # an arithmetic witness of N and catches an N that agrees across pages but
+    # was never the real one.
+    if "electorate_size" in obj and obj["electorate_size"] not in n:
+        fail(f"the election record says electorate_size={obj['electorate_size']}, "
+             f"the page(s) claim {sorted(n)} — N is not the governing size")
+    claimed_n = n.pop()
+    if isinstance(obj.get("floor"), int) and not args.preview:
+        from_floor = max(5, math.ceil(0.30 * claimed_n))
+        if obj["floor"] != from_floor:
+            fail(f"the record's floor {obj['floor']} is not the floor of "
+                 f"electorate_size={claimed_n} (which would be {from_floor}): "
+                 "the page's N and the record's tally disagree")
+    n.add(claimed_n)
 
     items: dict[int, dict] = {}
     for p in pages:
@@ -96,6 +118,36 @@ def main() -> int:
              f"{tail[0]['next_before']} — older pages exist and were not supplied")
     if not all(p.get("complete") for p in tail):
         fail("the page holding seq 1 does not report itself complete")
+
+    # What a page can get wrong about a ballot without contradicting itself. The
+    # option set of a ranking is frozen at the opening, so an option that is
+    # neither a candidate id nor the vacancy literal is a page that does not
+    # match the ballot it claims to be -- the tally engine would silently skip
+    # it, which turns a fabricated page into a reported note. A repeated option
+    # is the same argument with a smaller cost: nothing changes in the count,
+    # which is exactly why it has to be refused on the shape and not on the
+    # result.
+    frozen = obj.get("candidates") or []
+    if isinstance(frozen, dict):
+        frozen = frozen.get("items") or []
+    allowed = {c.get("agent_id") or c.get("id") for c in frozen} | {"vacancy"}
+    record_names = {c.get("agent_id") or c.get("id"): c.get("name") for c in frozen}
+    mandate = obj.get("mandate") or {}
+    if mandate.get("agent_id") and mandate.get("name"):
+        record_names.setdefault(mandate["agent_id"], mandate["name"])
+    for seq, it in sorted(items.items()):
+        opts = it.get("ranking") or []
+        stray = [o for o in opts if o not in allowed]
+        if stray:
+            fail(f"seq {seq} ranks {stray[0]!r}, which is neither a frozen candidate "
+                 f"nor the vacancy literal")
+        if len(set(opts)) != len(opts):
+            dup = next(o for o in opts if opts.count(o) > 1)
+            fail(f"seq {seq} ranks {dup!r} twice: the page is not a ballot as cast")
+        named = record_names.get(it.get("agent_id"))
+        if named and it.get("name") and it["name"] != named:
+            fail(f"seq {seq} names {it['name']!r} for an account the record names "
+                 f"{named!r}")
 
     closed = str(obj.get("status", "")).lower() in {"closed", "decided", "counted", "final"}
     if not closed and not args.preview:

@@ -99,6 +99,32 @@ def main() -> int:
             items[it["seq"]] = it
 
     claimed = votes_cast.pop()
+    # The record states its count more than once, and the last statement is not a
+    # statement at all: it is the tally the count is the sum of. A page and the
+    # record's votes_cast moved together still leave the record's own arithmetic
+    # disagreeing with both -- and a record whose published round counts do not
+    # add up to the number of ballots it reports is broken before any page is
+    # compared with it. Every statement of the same number is a witness of it.
+    rec = obj.get("result") or {}
+    for key in ("votes_cast", "ballots_cast", "electorate_size", "floor"):
+        if key in rec and key in obj and rec[key] != obj[key]:
+            fail(f"the record contradicts itself: {key} is {obj[key]} at the top and "
+                 f"{rec[key]} under result")
+    frozen_obj = obj.get("candidates") or []
+    if isinstance(frozen_obj, dict):
+        frozen_obj = frozen_obj.get("items") or []
+    frozen_ids = [c.get("agent_id") or c.get("id") for c in frozen_obj]
+    if isinstance(rec.get("candidates"), int) and frozen_ids \
+            and rec["candidates"] != len(frozen_ids):
+        fail(f"the record says {rec['candidates']} candidates, the frozen ballot names "
+             f"{len(frozen_ids)}")
+    rounds = rec.get("rounds") or []
+    if rounds and isinstance(rounds[0].get("counts"), dict):
+        counts = {k: v for k, v in rounds[0]["counts"].items() if isinstance(v, int)}
+        derived = sum(counts.values()) + (rounds[0].get("exhausted") or 0)
+        if derived != claimed:
+            fail(f"the record's own tally sums to {derived}, its votes_cast is {claimed}: "
+                 "the record is internally inconsistent")
     # The roll is a chain, not one page: the newest page carries next_before, the
     # page that reaches the oldest ballot carries none. So the test is not "no page
     # has next_before" — it is that the chain is unbroken: every seq from 1 to

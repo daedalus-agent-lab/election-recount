@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 59 expectations, exit 0 when all hold
+./verify.sh          # 61 expectations, exit 0 when all hold
 ```
 
 The two readings of the floor gate, and who could be a neutral witness, are
@@ -80,7 +80,9 @@ shapes, twelve refused, three named as still open:
 | a gap in the middle / the oldest page not supplied | the chain gap |
 | the oldest page still carries `next_before`, or `complete: false` | the tail checks |
 | one ballot on both pages | duplicate seq |
-| `votes_cast` above / below what is held | the chain, or the record |
+| `votes_cast` above / below what is held | the record contradicting itself |
+| **the count moved in every field that states it** | the record's own tally, which still sums to the old number |
+| **the record's candidate count wrong** | the frozen ballot's own list |
 | the record read at another moment | the record's `votes_cast`, `electorate_size` |
 | **`N` moved on the page only** | the record's `electorate_size`, then its `floor` |
 | a ranking naming an account never on the ballot | the frozen candidate set |
@@ -89,7 +91,7 @@ shapes, twelve refused, three named as still open:
 | `votes_cast` and `N` moved on page *and* record | nothing local — that is what the published digest is for |
 | a name the record never gives | nothing; the field is decoration and is not in the digest |
 
-The two in bold were real gaps found by writing the table, and both are closed in
+Every shape in bold was a real gap found by writing the table, and each is closed in
 `capture_roll.py`: the record witnesses `votes_cast` **and** `electorate_size`
 (and its own published `floor` is an arithmetic witness of `N`, which catches an
 `N` that agrees across pages but was never the governing size), and a ranking may

@@ -104,6 +104,51 @@ def shape_votes_cast_deflated(obj, new, old):
     return obj, new, old
 
 
+def shape_count_moved_with_its_field_only(obj, new, old):
+    """The page and the record's votes_cast moved together; the record's tally did not.
+
+    This is the shape that walked through the previous round's fix: the two
+    witnesses named in the code agree with each other, and the disagreement is
+    inside the record, between the number it states and the round counts it
+    states, which add up to the number it was.
+    """
+    new["items"] = [it for it in new["items"] if it["seq"] != 37]
+    for p in (new, old):
+        p["votes_cast"] = 36
+    obj["votes_cast"] = 36
+    return obj, new, old
+
+
+def shape_count_moved_in_every_stated_field(obj, new, old):
+    """The count moved on the page and in every field where the record states it.
+
+    The only thing left disagreeing is the record's arithmetic: the round counts
+    still add up to what the count was, and a sum is not a field anyone moves by
+    hand. This is the shape that needs the tally as its witness -- without it,
+    nothing here contradicts anything.
+    """
+    new["items"] = [it for it in new["items"] if it["seq"] != 37]
+    for p in (new, old):
+        p["votes_cast"] = 36
+    obj["votes_cast"] = 36
+    for key in ("votes_cast", "ballots_cast"):
+        if key in obj["result"]:
+            obj["result"][key] = 36
+    return obj, new, old
+
+
+def shape_record_contradicts_itself(obj, new, old):
+    """The record states the count one way and again, differently."""
+    obj["result"]["votes_cast"] = 36
+    return obj, new, old
+
+
+def shape_record_candidate_count_wrong(obj, new, old):
+    """The record says the ballot carried one candidate more than it did."""
+    obj["result"]["candidates"] = obj["result"]["candidates"] + 1
+    return obj, new, old
+
+
 def shape_record_disagrees(obj, new, old):
     """The page pair is intact; the election record was read at another moment."""
     obj["votes_cast"] = 36
@@ -183,6 +228,12 @@ SHAPES = [
     ("votes_cast above what is held", shape_votes_cast_inflated, "page+record"),
     ("votes_cast below what is held", shape_votes_cast_deflated, "page+record"),
     ("record read at another moment", shape_record_disagrees, "record"),
+    ("count moved with its own field", shape_count_moved_with_its_field_only,
+     "page+record field"),
+    ("count moved in every stated field", shape_count_moved_in_every_stated_field,
+     "page+record"),
+    ("the record contradicts itself", shape_record_contradicts_itself, "record"),
+    ("the record's candidate count wrong", shape_record_candidate_count_wrong, "record"),
     ("N moved on the page only", shape_electorate_wrong_on_the_page, "page"),
     ("N moved on page and record", shape_electorate_wrong_everywhere, "page+record"),
     ("ranking names a non-candidate", shape_ranking_option_not_on_the_ballot, "page"),

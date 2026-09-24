@@ -301,3 +301,32 @@ joined by commas is 101 B, `403be04ad343e00c` in wire order against
 `8637f261dc591294` by `seq` — one length, two numbers, no canonicaliser in sight.
 `./verify.sh` pins the collapsed orders, the comma pair and the shuffled run:
 **59 expectations**.
+
+## Twelfth round: the record states a number, derives it, and adds it up
+
+A reply to the coverage table generalised it: a record should name not just the
+fields a page may cite, but **every field the record itself derives from them**,
+because a derived quantity is at once a redundant check and an independent
+witness. Applied to the record already in hand, that is three ways of witnessing
+one number, and only the first was in use:
+
+- it **states** each number twice -- `votes_cast`, `ballots_cast`,
+  `electorate_size` and `floor` at the top level and again under `result`;
+- it **derives** `floor` from `N` (the previous round's close);
+- it **publishes the tally the count is the sum of**: the round-1 counts plus
+  `exhausted` are 37, and a sum is not a field anyone edits by hand.
+
+The third closes the two shapes that survived the previous round. A page and the
+record's stated count moved *together* -- page `votes_cast` 36, the ballot at seq
+37 dropped, `votes_cast` under `result` also 36 -- leaves only the arithmetic
+disagreeing, and the arithmetic is enough: `the record's own tally sums to 37,
+its votes_cast is 36`. The same round checks the record's candidate count against
+the frozen ballot's own list, and finds the record contradicting itself where it
+states one number two ways.
+
+The table is now **19 shapes, 18 refused, 1 open**, and the one that remains open
+is the one that cannot be closed: an ordinary voter's name, which the record never
+gives, which no step reads and which the digest excludes. `./verify.sh` pins the
+summary, the self-contradiction, the tally-as-witness and the candidate count:
+**61 expectations**.
+

@@ -275,12 +275,14 @@ ok "the wire order and a rename" $? 0 "$tmp/34.log" "no 'first' on the wire"
 # ranking could name an account that was never on the ballot.
 python3 experiments/lie_shapes.py >"$tmp/35.log" 2>&1
 rc=$?
-ok "lie shapes: the coverage table runs" $rc 0 "$tmp/35.log" "shapes 15   refused 12   uncovered 3"
+ok "lie shapes: the coverage table runs" $rc 0 "$tmp/35.log" "shapes 19   refused 18   uncovered 1"
 ok "lie shapes: N is witnessed by the record" $rc 0 "$tmp/35.log" "the election record says electorate_size=67"
 ok "lie shapes: a ranking off the ballot is refused" $rc 0 "$tmp/35.log" "neither a frozen candidate"
 ok "lie shapes: a repeated option is refused" $rc 0 "$tmp/35.log" "ranks 'vacancy' twice"
 ok "lie shapes: a candidate's name is checked" $rc 0 "$tmp/35.log" "the record names"
-ok "lie shapes: the remaining gap is named" $rc 0 "$tmp/35.log" "no local witness is left alive"
+ok "lie shapes: the record contradicts itself" $rc 0 "$tmp/35.log" "votes_cast is 36 at the top and 37 under result"
+ok "lie shapes: the record's own tally is a witness" $rc 0 "$tmp/35.log" "the record's own tally sums to 37, its votes_cast is 36"
+ok "lie shapes: the candidate count is checked" $rc 0 "$tmp/35.log" "the record says 8 candidates, the frozen ballot names 7"
 ok "lie shapes: an unverifiable name is listed" $rc 0 "$tmp/35.log" "the record is authentic: a gate is missing here"
 
 # Who could be a neutral witness, defined by the roll instead of argued about: a

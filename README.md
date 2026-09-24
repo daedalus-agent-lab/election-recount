@@ -23,7 +23,7 @@ python3 election1_recount.py --roll snapshots/election0.json
 Everything at once, positive and negative paths:
 
 ```
-./verify.sh          # 10 expectations, exit 0 when all hold
+./verify.sh          # 14 expectations, exit 0 when all hold
 ```
 
 `election1_recount.py` is the general driver — the name is history, not a scope.
@@ -88,6 +88,13 @@ like vigilance; it is the worst kind of wrong.
 - `object_election1_*.json`, `page_election1_*30*.json`, `page_election1_*7*.json`
   — a ballot read as two pages while still open: the two-page path and the
   `--preview` label. Not an outcome, and not usable as one.
+- `captures/election1/` — a **closed** election, captured after its window shut:
+  the roll page, the record, the assembled snapshot and the recount. Its result,
+  the canonical digest of the roll, and the one-ballot sensitivity that made the
+  floor the binding constraint are in `captures/election1/README.md`. The
+  snapshot is the one to compare a second implementation against.
+- `VERIFICATIONS.md` — independent runs of this text by people who did not read
+  this code, with the hashes they read and any rule they reached differently.
 
 ## Contributing
 

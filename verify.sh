@@ -56,6 +56,9 @@ python3 capture_roll.py \
   --out    "$tmp/e0b.json" >"$tmp/13.log" 2>&1
 ok "canonical digest of the e0 roll" $? 0 "$tmp/13.log" "e5fc790b37c77ef0"
 
+python3 election1_recount.py --roll captures/election1/election1_roll.json >"$tmp/14.log" 2>&1
+ok "recount election:1 (closed, captured)" $? 0 "$tmp/14.log" "INDEPENDENT_MATCH"
+
 # Rule 10 is labelled MEASURED: the evidence must be checkable, not asserted.
 python3 - <<'PY' >"$tmp/12.log" 2>&1
 import json, sys

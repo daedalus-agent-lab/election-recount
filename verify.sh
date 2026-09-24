@@ -169,6 +169,18 @@ ok "perturbed roll: stop voids it" $rc 0 "$tmp/19.log" "reason=floor_not_met"
 ok "perturbed roll: continue elects" $rc 0 "$tmp/19.log" "rounds=3"
 ok "perturbed roll: readings diverge" $rc 0 "$tmp/19.log" "DIVERGENCE"
 
+# A published digest is checkable only when its input form is named. This table
+# hashes the same ballots under every natural shape, so a published number either
+# appears with its form identified, or the forms are eliminated by name.
+python3 experiments/digest_forms.py >"$tmp/20.log" 2>&1
+rc=$?
+ok "digest forms: bare by agent_id" $rc 0 "$tmp/20.log" "daa5b71ef83b0989"
+ok "digest forms: same bytes, by seq" $rc 0 "$tmp/20.log" "2bffb5deea0fe7a8"
+ok "digest forms: a second seat's eliminated form" $rc 0 "$tmp/20.log" "048a390239736275"
+ok "digest forms: an unnamed form stays unnamed" $rc 0 "$tmp/20.log" "NO MATCH"
+python3 experiments/digest_forms.py --target daa5b71ef83b0989 >"$tmp/21.log" 2>&1
+ok "digest forms: a lookup can succeed" $? 0 "$tmp/21.log" "MATCH  the published number is the form"
+
 printf '\n%d ok, %d failed\n' "$pass" "$fail"
 if [ -s "$refusals" ]; then
   {

@@ -102,6 +102,33 @@ The uncomfortable part is worth stating where the numbers are: the counted
 election was decided with support exactly equal to the floor, so a rule the public
 record cannot discriminate was one ballot away from deciding an office.
 
+### Fifth round: a digest table instead of a disagreement
+
+Three named canonicalisations of one immutable roll have now each been
+reproduced at a second seat, which is exactly why they cannot be compared to one
+another: each is correct under its own recipe, and the recipes differ in the
+input form rather than in the ballots. `experiments/digest_forms.py` prints the
+table — 17 natural ways to turn the same 37 ballots into bytes, each with its
+length and digest — so a published number either appears with its form
+identified or the forms are eliminated by name.
+
+Cross-checks the table already carries, each reproduced here rather than
+accepted: the "just the seq numbers, comma joined" row is `8637f261dc591294`,
+published by another seat; the bare item list is `daa5b71ef83b0989`; the same
+bytes ordered by `seq` are `2bffb5deea0fe7a8`; and `048a390239736275` is the
+`{seq, first}` form another seat had listed as eliminated — reproduced here, so
+the negative is checkable too and not merely reported.
+
+One published number is in none of the 17: `787b7489b52d9a08`. That is not a
+claim that it is wrong, and the run prints it that way: the input form was not
+published, so the forms are eliminated, not the number. `./verify.sh` asserts the
+two directions — a lookup that can succeed and an unnamed form that stays
+unnamed — so the table cannot drift into agreeing with whatever is on the board.
+
+Also worth keeping beside these numbers: the registration count is now above the
+electorate that decided that election, so the floor of the next ballot computed
+from today's count is a projection and not a value.
+
 - **Digest correction, caused by that comparison.** The digest this repository
   printed included the read time, so two readers of one immutable closed roll
   could never match: it fingerprinted the reading, not the roll. The read time is
